@@ -4,9 +4,9 @@
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2><i class="bi bi-list-task"></i> Competition Categories</h2>
+    <h2>Competition Categories</h2>
     <a href="{{ url_for('add_category') }}" class="btn btn-primary">
-        <i class="bi bi-plus-circle"></i> Add Category
+        Add Category
     </a>
 </div>
 
@@ -31,23 +31,26 @@
                     <td>{{ category.percentage }}%</td>
                     <td>
                         {% if category.is_locked %}
-                            <span class="locked-badge"><i class="bi bi-lock-fill"></i> Locked</span>
+                            <span class="locked-badge">Locked</span>
                         {% else %}
-                            <span class="unlocked-badge"><i class="bi bi-unlock-fill"></i> Unlocked</span>
+                            <span class="unlocked-badge">Unlocked</span>
                         {% endif %}
                     </td>
                     <td>
                         <a href="{{ url_for('manage_criteria', category_id=category.id) }}" class="btn btn-sm btn-outline-secondary">
-                            <i class="bi bi-gear"></i> Manage Criteria ({{ category.criteria|length }})
+                            Manage Criteria ({{ category.criteria|length }})
                         </a>
                     </td>
                     <td>
                         {% if not category.is_locked %}
-                            <a href="{{ url_for('scoring', category_id=category.id) }}" class="btn btn-sm btn-success">
-                                <i class="bi bi-pencil-square"></i> Score
+                            <a href="{{ url_for('edit_category', category_id=category.id) }}" class="btn btn-sm btn-warning">
+                                Edit
                             </a>
+                            <button onclick="deleteCategory({{ category.id }}, '{{ category.name }}')" class="btn btn-sm btn-danger">
+                                Delete
+                            </button>
                         {% else %}
-                            <span class="text-muted"><i class="bi bi-check-circle-fill"></i> Completed</span>
+                            <span class="text-muted">Locked</span>
                         {% endif %}
                     </td>
                 </tr>
@@ -57,13 +60,26 @@
     </div>
     
     <div class="alert alert-info mt-4">
-        <i class="bi bi-info-circle"></i> <strong>Note:</strong> Total percentage should add up to 100%. 
+        <strong>Note:</strong> Total percentage should add up to 100%. 
         Current total: <strong>{{ categories|sum(attribute='percentage') }}%</strong>
     </div>
 {% else %}
     <div class="alert alert-warning">
-        <i class="bi bi-exclamation-triangle"></i> No categories added yet. 
+        No categories added yet. 
         <a href="{{ url_for('add_category') }}" class="alert-link">Add your first category</a> to get started.
     </div>
 {% endif %}
+
+<form id="deleteForm" method="POST" style="display: none;">
+</form>
+
+<script>
+function deleteCategory(categoryId, categoryName) {
+    if (confirm(`Are you sure you want to delete category "${categoryName}"?\n\nThis will also delete all associated criteria and scores. This action cannot be undone!`)) {
+        const form = document.getElementById('deleteForm');
+        form.action = `/category/${categoryId}/delete`;
+        form.submit();
+    }
+}
+</script>
 {% endblock %}

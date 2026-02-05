@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}Competition Settings{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <h2 class="mb-4">
+            <i class="bi bi-gear-fill"></i> Competition Settings
+        </h2>
+
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title mb-3">General Settings</h5>
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="competition_title" class="form-label">
+                            <strong>Competition Title</strong>
+                        </label>
+                        <input type="text" 
+                               class="form-control form-control-lg" 
+                               id="competition_title" 
+                               name="competition_title" 
+                               value="{{ settings.competition_title }}" 
+                               required
+                               placeholder="e.g., Pageant Competition, Dance Competition, Singing Contest">
+                        <div class="form-text">
+                            This title will appear on the public homepage, results page, and PDF reports.
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle-fill me-2"></i>
+                        <strong>Examples:</strong>
+                        <ul class="mb-0 mt-2">
+                            <li>Pageant Competition</li>
+                            <li>Dance Competition</li>
+                            <li>Singing Contest</li>
+                            <li>Talent Show</li>
+                            <li>Search for Mr. & Ms. MSEUF 2026</li>
+                        </ul>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i> Save Changes
+                        </button>
+                        <a href="{{ url_for('admin_settings') }}" class="btn btn-secondary">
+                            <i class="bi bi-x-circle"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card shadow-sm mt-4">
+            <div class="card-body">
+                <h6 class="text-muted">
+                    <i class="bi bi-clock-history"></i> Last Updated
+                </h6>
+                <p class="mb-0">
+                    {{ settings.updated_at.strftime('%B %d, %Y at %I:%M %p') if settings.updated_at else 'Never' }}
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

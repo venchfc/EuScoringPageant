@@ -4,6 +4,11 @@ A professional web-based scoring system for pageant competitions built with Flas
 
 ## Features
 
+🔐 **Secure Admin Authentication**
+- Protected setup pages (Categories, Contestants, Judges)
+- Prevents unauthorized access and cheating
+- Simple login system for administrators
+
 ✨ **Dynamic Categories & Criteria**
 - Add unlimited competition categories (Evening Gown, Swimsuit, Q&A, etc.)
 - Define custom criteria for each category with percentage weights
@@ -20,14 +25,48 @@ A professional web-based scoring system for pageant competitions built with Flas
 - Beautiful podium display for top 3 contestants
 - Detailed score breakdown tables
 
-👥 **Contestant Management**
+👥 **Multi-Judge Scoring**
+- Support for multiple judges
+- Independent scoring per judge
+- Automatic score averaging for final results
+
+👤 **Contestant Management**
 - Easy contestant registration with numbers and names
 - Visual contestant cards
 
 🎨 **Modern UI**
+- Professional maroon and white theme
 - Responsive Bootstrap 5 design
-- Beautiful gradient themes
 - Mobile-friendly interface
+
+## Admin Credentials
+
+**Default Login:**
+- Username: `admin`
+- Password: `admin123`
+
+⚠️ **Important:** Change these credentials in `app.py` before production use:
+```python
+ADMIN_USERNAME = 'admin'
+ADMIN_PASSWORD = 'admin123'
+```
+
+## Access Levels
+
+### Public Access (No Login Required)
+- Home page
+- Scoring menu
+- Enter scores
+- View results
+
+### Admin Access (Login Required)
+- Manage categories
+- Add/Edit/Delete categories
+- Manage criteria
+- Manage contestants
+- Add/Edit/Delete contestants
+- Manage judges
+- Add/Edit/Delete judges
 
 ## Installation
 

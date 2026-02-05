@@ -5,8 +5,8 @@
 {% block content %}
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="{{ url_for('categories') }}">Categories</a></li>
-        <li class="breadcrumb-item active">Scoring - {{ category.name }}</li>
+        <li class="breadcrumb-item"><a href="{{ url_for('scoring_menu') }}">Scoring</a></li>
+        <li class="breadcrumb-item active">{{ category.name }}</li>
     </ol>
 </nav>
 
@@ -16,54 +16,72 @@
         <button onclick="saveScores()" class="btn btn-success me-2">
             <i class="bi bi-save"></i> Save Scores
         </button>
-        <button onclick="lockCategory()" class="btn btn-danger">
-            <i class="bi bi-lock-fill"></i> Save & Lock Category
+        <button onclick="lockCategory()" class="btn btn-primary">
+            <i class="bi bi-lock-fill"></i> Lock Category Score
         </button>
     </div>
 </div>
 
-<div class="alert alert-warning">
-    <i class="bi bi-exclamation-triangle"></i> <strong>Warning:</strong> Once you lock this category, scores cannot be changed!
+<div class="alert mb-3" style="background-color: #f8e8eb; border-left: 4px solid #800000; color: #333;">
+    <i class="bi bi-person-badge"></i> <strong>Select Judge:</strong>
+    <select id="judgeSelect" class="form-select d-inline-block ms-2" style="width: 350px;" onchange="loadJudgeScores()">
+        <option value="">-- Select a Judge --</option>
+        {% for judge in judges %}
+        <option value="{{ judge.id }}">Judge #{{ judge.number }} - {{ judge.name }}</option>
+        {% endfor %}
+    </select>
+</div>
+
+<div class="alert" style="background-color: #fff3e6; border-left: 4px solid #d35400; color: #8b4000;">
+    <strong style="color: #d35400;">Warning:</strong> Once you lock this category, scores cannot be changed! All {{ judges|length }} judges must complete scoring first.
 </div>
 
 {% if criteria %}
-    <div class="table-responsive">
-        <table class="table table-bordered">
-            <thead class="table-dark">
-                <tr>
-                    <th>Contestant #</th>
-                    <th>Name</th>
-                    {% for criterion in criteria %}
-                    <th>{{ criterion.name }}<br><small>({{ criterion.percentage }}%)</small></th>
+    <div id="scoringTable" style="display: none;">
+        <div class="table-responsive">
+            <table class="table table-bordered">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Contestant #</th>
+                        <th>Name</th>
+                        {% for criterion in criteria %}
+                        <th>{{ criterion.name }}<br><small>({{ criterion.percentage }}%)</small></th>
+                        {% endfor %}
+                        <th>Category Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for contestant in contestants %}
+                    <tr>
+                        <td class="text-center"><strong>{{ contestant.number }}</strong></td>
+                        <td><strong>{{ contestant.name }}</strong></td>
+                        {% for criterion in criteria %}
+                        <td>
+                            <input type="number" 
+                                   class="form-control score-input" 
+                                   data-contestant="{{ contestant.id }}" 
+                                   data-criteria="{{ criterion.id }}"
+                                   data-judge=""
+                                   min="0" 
+                                   max="10" 
+                                   step="0.01"
+                                   value=""
+                                   placeholder="0-10"
+                                   disabled>
+                        </td>
+                        {% endfor %}
+                        <td class="text-center">
+                            <strong class="contestant-total" data-contestant="{{ contestant.id }}">0.00</strong>
+                        </td>
+                    </tr>
                     {% endfor %}
-                    <th>Category Total</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for contestant in contestants %}
-                <tr>
-                    <td class="text-center"><strong>{{ contestant.number }}</strong></td>
-                    <td><strong>{{ contestant.name }}</strong></td>
-                    {% for criterion in criteria %}
-                    <td>
-                        <input type="number" 
-                               class="form-control score-input" 
-                               data-contestant="{{ contestant.id }}" 
-                               data-criteria="{{ criterion.id }}"
-                               min="0" 
-                               max="100" 
-                               step="0.01"
-                               value="{{ existing_scores.get(contestant.id ~ '_' ~ criterion.id, '') }}"
-                               placeholder="0-100">
-                    </td>
-                    {% endfor %}
-                    <td class="text-center">
-                        <strong class="contestant-total" data-contestant="{{ contestant.id }}">0.00</strong>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <div id="noJudgeSelected" class="alert alert-info">
+        <i class="bi bi-info-circle"></i> Please select a judge from the dropdown above to start scoring.
     </div>
 {% else %}
     <div class="alert alert-danger">
@@ -73,8 +91,8 @@
 {% endif %}
 
 <div class="mt-4">
-    <a href="{{ url_for('categories') }}" class="btn btn-secondary">
-        <i class="bi bi-arrow-left"></i> Back to Categories
+    <a href="{{ url_for('scoring_menu') }}" class="btn btn-primary">
+        <i class="bi bi-arrow-left"></i> Back to Scoring Dashboard
     </a>
 </div>
 {% endblock %}
@@ -83,17 +101,79 @@
 <script type="application/json" id="page-data">
 {
     "categoryId": {{ category.id|tojson }},
-    "criteriaPercentages": {{ dict((c.id, c.percentage) for c in criteria)|tojson }}
+    "criteriaPercentages": {
+        {% for c in criteria %}
+        "{{ c.id }}": {{ c.percentage }}{% if not loop.last %},{% endif %}
+        {% endfor %}
+    },
+    "existingScores": {{ existing_scores|tojson }}
 }
 </script>
 <script>
 const pageData = JSON.parse(document.getElementById('page-data').textContent);
 const categoryId = pageData.categoryId;
 const criteriaPercentages = pageData.criteriaPercentages;
+const existingScores = pageData.existingScores;
+let currentJudgeId = null;
+
+// Load scores for selected judge
+function loadJudgeScores() {
+    const judgeSelect = document.getElementById('judgeSelect');
+    currentJudgeId = judgeSelect.value;
+    
+    if (!currentJudgeId) {
+        document.getElementById('scoringTable').style.display = 'none';
+        document.getElementById('noJudgeSelected').style.display = 'block';
+        return;
+    }
+    
+    document.getElementById('scoringTable').style.display = 'block';
+    document.getElementById('noJudgeSelected').style.display = 'none';
+    
+    // Load existing scores for this judge
+    document.querySelectorAll('.score-input').forEach(input => {
+        input.disabled = false;
+        input.dataset.judge = currentJudgeId;
+        
+        const contestantId = input.dataset.contestant;
+        const criteriaId = input.dataset.criteria;
+        const key = `${currentJudgeId}_${contestantId}_${criteriaId}`;
+        
+        input.value = existingScores[key] || '';
+        
+        // Add validation event listener
+        input.addEventListener('input', function(e) {
+            validateScoreInput(this);
+        });
+    });
+    
+    calculateTotals();
+}
+
+// Validate score input to ensure it's within 0-10 range
+function validateScoreInput(input) {
+    let value = parseFloat(input.value);
+    
+    if (input.value !== '' && !isNaN(value)) {
+        if (value > 10) {
+            alert('Invalid score! The maximum score is 10.');
+            input.value = '10';
+            value = 10;
+        } else if (value < 0) {
+            alert('Invalid score! The minimum score is 0.');
+            input.value = '0';
+            value = 0;
+        }
+    }
+    
+    calculateTotals();
+}
 
 // Calculate totals when scores change
 document.querySelectorAll('.score-input').forEach(input => {
-    input.addEventListener('input', calculateTotals);
+    input.addEventListener('input', function() {
+        validateScoreInput(this);
+    });
 });
 
 function calculateTotals() {
@@ -108,7 +188,8 @@ function calculateTotals() {
             const score = parseFloat(input.value) || 0;
             const criteriaId = input.dataset.criteria;
             const percentage = criteriaPercentages[criteriaId] / 100;
-            total += score * percentage;
+            // Multiply by 10 to normalize 0-10 scale to 0-100 scale
+            total += (score * 10) * percentage;
         });
         
         const totalElement = document.querySelector(`.contestant-total[data-contestant="${contestantId}"]`);
@@ -120,6 +201,30 @@ function calculateTotals() {
 calculateTotals();
 
 function saveScores() {
+    if (!currentJudgeId) {
+        alert('Please select a judge first!');
+        return;
+    }
+    
+    // Validate all scores before saving
+    let hasInvalidScore = false;
+    document.querySelectorAll('.score-input').forEach(input => {
+        if (input.value !== '') {
+            const score = parseFloat(input.value);
+            if (score < 0 || score > 10) {
+                hasInvalidScore = true;
+                input.style.borderColor = 'red';
+            } else {
+                input.style.borderColor = '';
+            }
+        }
+    });
+    
+    if (hasInvalidScore) {
+        alert('Please correct invalid scores. All scores must be between 0 and 10.');
+        return;
+    }
+    
     const scores = [];
     document.querySelectorAll('.score-input').forEach(input => {
         const score = parseFloat(input.value);
@@ -137,12 +242,20 @@ function saveScores() {
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ scores: scores })
+        body: JSON.stringify({ 
+            scores: scores,
+            judge_id: parseInt(currentJudgeId)
+        })
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
             alert('Scores saved successfully!');
+            // Update existingScores cache
+            scores.forEach(s => {
+                const key = `${currentJudgeId}_${s.contestant_id}_${s.criteria_id}`;
+                existingScores[key] = s.score;
+            });
         } else {
             alert('Error: ' + data.message);
         }
@@ -153,56 +266,33 @@ function saveScores() {
 }
 
 function lockCategory() {
-    if (!confirm('Are you sure you want to LOCK this category? This action is IRREVERSIBLE!')) {
+    if (!currentJudgeId) {
+        alert('Please select a judge first and save their scores!');
         return;
     }
     
-    // First save the scores
-    const scores = [];
-    document.querySelectorAll('.score-input').forEach(input => {
-        const score = parseFloat(input.value);
-        if (score || score === 0) {
-            scores.push({
-                contestant_id: parseInt(input.dataset.contestant),
-                criteria_id: parseInt(input.dataset.criteria),
-                score: score
-            });
-        }
-    });
+    if (!confirm('Are you sure you want to LOCK this category?\n\nIMPORTANT: Make sure ALL judges have completed scoring!\n\nThis action is IRREVERSIBLE!')) {
+        return;
+    }
     
-    // Save scores first
-    fetch(`/scoring/${categoryId}/save`, {
+    // Lock the category (no need to save again, judges already saved their scores)
+    fetch(`/category/${categoryId}/lock`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ scores: scores })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (!data.success) {
-            throw new Error(data.message);
         }
-        
-        // Then lock the category
-        return fetch(`/category/${categoryId}/lock`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        });
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            alert('Category locked successfully!');
-            window.location.href = '/categories';
+            alert(data.message + '\n\nRedirecting to scoring menu...');
+            window.location.href = '/scoring';
         } else {
             alert('Error: ' + data.message);
         }
     })
     .catch(error => {
-        alert('Error: ' + error);
+        alert('Error locking category: ' + error);
     });
 }
 </script>

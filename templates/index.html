@@ -1,65 +1,146 @@
 {% extends "base.html" %}
 
+{% block extra_css %}
+{% if not session.get('logged_in') %}
+<style>
+    body {
+        background: linear-gradient(rgba(244, 65, 65, 0.45), rgba(243, 149, 91, 0.45)), 
+                    url('{{ url_for('static', filename='images/mseuf_background.jpg') }}');
+        background-size: cover;
+        background-position: center center;
+        background-attachment: fixed;
+        background-repeat: no-repeat;
+    }
+</style>
+{% endif %}
+{% endblock %}
+
 {% block content %}
-<div class="text-center">
-    <h1 class="display-4 mb-4"><i class="bi bi-trophy-fill text-warning"></i> Pageant Scoring System</h1>
-    <p class="lead mb-5">Professional scoring system for pageant competitions</p>
-    
-    <div class="row g-4">
-        <div class="col-md-4">
-            <div class="card h-100 shadow-sm">
-                <div class="card-body text-center">
-                    <i class="bi bi-list-task display-1 mb-3" style="color: #800020;"></i>
-                    <h5 class="card-title">Categories</h5>
-                    <p class="card-text">Manage competition categories and criteria</p>
-                    <a href="{{ url_for('categories') }}" class="btn btn-primary">Manage Categories</a>
+{% if session.get('logged_in') %}
+    <!-- ADMIN DASHBOARD -->
+    <div class="text-center">
+        <h1 class="display-4 mb-4">Admin Dashboard</h1>
+        <p class="lead mb-5">Manage your competition system</p>
+        
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Categories</h5>
+                        <p class="card-text">Manage competition categories and criteria</p>
+                        <a href="{{ url_for('categories') }}" class="btn btn-primary">Manage Categories</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Contestants</h5>
+                        <p class="card-text">Add and manage pageant contestants</p>
+                        <a href="{{ url_for('contestants') }}" class="btn btn-primary">Manage Contestants</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Judges</h5>
+                        <p class="card-text">Add and manage competition judges</p>
+                        <a href="{{ url_for('judges') }}" class="btn btn-primary">Manage Judges</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4 mt-3">
+            <div class="col-md-6">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Results</h5>
+                        <p class="card-text">View rankings and final scores</p>
+                        <a href="{{ url_for('results') }}" class="btn btn-primary">View Results</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Settings</h5>
+                        <p class="card-text">System settings and administration</p>
+                        <a href="{{ url_for('admin_settings') }}" class="btn btn-primary">Admin Settings</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-5">
+            <h3>Quick Start Guide</h3>
+            <ol class="text-start mt-3">
+                <li>Add competition <strong>Categories</strong> (e.g., Evening Gown, Swimsuit) with percentages</li>
+                <li>Add <strong>Criteria</strong> for each category (e.g., Poise, Presentation) with percentages</li>
+                <li>Add <strong>Contestants</strong> with their names and numbers</li>
+                <li>Add <strong>Judges</strong> who will score the competition</li>
+                <li>Enter <strong>Scores</strong> for each category</li>
+                <li><strong>Lock</strong> each category when scoring is complete (irreversible!)</li>
+                <li>View <strong>Results</strong> with rankings when all categories are locked</li>
+            </ol>
+        </div>
+    </div>
+
+{% else %}
+    <!-- PUBLIC DASHBOARD -->
+    <div class="text-center">
+        <!-- Hero Section -->
+        <div class="mb-5 py-4">
+            <h1 class="display-3 mb-3" style="color: #800000; font-weight: 700;">
+                <i class="bi bi-trophy-fill"></i> {{ competition_title }}
+            </h1>
+            <p class="lead text-dark" style="font-size: 1.3rem;">Welcome to the Official Scoring System</p>
+            <p class="text-muted" style="font-size: 1.1rem;">Manuel S. Enverga University Foundation - Catanauan Inc</p>
+        </div>
+        
+        <!-- Main Action Cards -->
+        <div class="row g-4 mb-5 justify-content-center">
+            <div class="col-lg-5 col-md-6">
+                <div class="card h-100 shadow-lg border-0" style="background: linear-gradient(135deg, #800000 0%, #a00000 100%);">
+                    <div class="card-body text-center text-white p-5">
+                        <i class="bi bi-trophy" style="font-size: 4rem; margin-bottom: 1.5rem; opacity: 0.9;"></i>
+                        <h3 class="card-title mb-3 fw-bold">View Live Results</h3>
+                        <p class="card-text mb-4" style="font-size: 1.05rem;">
+                            Check current standings, scores, and rankings from all competition categories
+                        </p>
+                        <a href="{{ url_for('results') }}" class="btn btn-light btn-lg px-5 py-3 fw-semibold">
+                            <i class="bi bi-eye"></i> View Results
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-5 col-md-6">
+                <div class="card h-100 shadow-lg border-0" style="background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);">
+                    <div class="card-body text-center text-white p-5">
+                        <i class="bi bi-pen-fill" style="font-size: 4rem; margin-bottom: 1.5rem; opacity: 0.9;"></i>
+                        <h3 class="card-title mb-3 fw-bold">Upload Judges’ Scores</h3>
+                        <p class="card-text mb-4" style="font-size: 1.05rem;">
+                            Access the scoring interface to submit your evaluations and ratings
+                        </p>
+                        <a href="{{ url_for('scoring_menu') }}" class="btn btn-light btn-lg px-5 py-3 fw-semibold">
+                            <i class="bi bi-clipboard-check"></i> Enter Scores
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
         
-        <div class="col-md-4">
-            <div class="card h-100 shadow-sm">
-                <div class="card-body text-center">
-                    <i class="bi bi-people display-1 mb-3" style="color: #800020;"></i>
-                    <h5 class="card-title">Contestants</h5>
-                    <p class="card-text">Add and manage pageant contestants</p>
-                    <a href="{{ url_for('contestants') }}" class="btn btn-primary">Manage Contestants</a>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-md-4">
-            <div class="card h-100 shadow-sm">
-                <div class="card-body text-center">
-                    <i class="bi bi-bar-chart display-1 mb-3" style="color: #800020;"></i>
-                    <h5 class="card-title">Results</h5>
-                    <p class="card-text">View rankings and final scores</p>
-                    <a href="{{ url_for('results') }}" class="btn btn-primary">View Results</a>
-                </div>
-            </div>
+        <!-- Developer Credit -->
+        <div class="text-center mt-4">
+            <small class="text-muted" style="font-size: 0.75rem;">Developed by Vench Catarroja | Information Technology Department</small>
         </div>
     </div>
+{% endif %}
 
-    <div class="mt-5">
-        <h3>Quick Start Guide</h3>
-        <ol class="text-start mt-3">
-            <li>Add competition <strong>Categories</strong> (e.g., Evening Gown, Swimsuit) with percentages</li>
-            <li>Add <strong>Criteria</strong> for each category (e.g., Poise, Presentation) with percentages</li>
-            <li>Add <strong>Contestants</strong> with their names and numbers</li>
-            <li>Enter <strong>Scores</strong> for each category</li>
-            <li><strong>Lock</strong> each category when scoring is complete (irreversible!)</li>
-            <li>View <strong>Results</strong> with rankings when all categories are locked</li>
-        </ol>
-    </div>
-
-    <div class="mt-4">
-        <small class="text-muted">
-            <form method="POST" action="{{ url_for('reset_database') }}" onsubmit="return confirm('Are you sure you want to reset all data? This cannot be undone!');">
-                <button type="submit" class="btn btn-sm btn-outline-danger">
-                    <i class="bi bi-exclamation-triangle"></i> Reset Database (Dev Only)
-                </button>
-            </form>
-        </small>
-    </div>
 </div>
 {% endblock %}

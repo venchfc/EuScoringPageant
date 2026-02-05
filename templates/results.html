@@ -13,45 +13,71 @@
     }
     .podium-place {
         text-align: center;
-        padding: 20px;
+        padding: 20px 15px;
         border-radius: 10px;
         box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
     }
     .first-place {
         background: linear-gradient(135deg, #800020 0%, #600018 100%);
-        height: 250px;
+        height: 280px;
         width: 200px;
         order: 2;
         border: 4px solid white;
     }
     .second-place {
         background: linear-gradient(135deg, #A0002A 0%, #800020 100%);
-        height: 200px;
+        height: 240px;
         width: 180px;
         order: 1;
         border: 3px solid white;
     }
     .third-place {
         background: linear-gradient(135deg, #C0003A 0%, #A0002A 100%);
-        height: 150px;
+        height: 200px;
         width: 180px;
         order: 3;
         border: 3px solid white;
     }
     .podium-number {
-        font-size: 3rem;
+        font-size: 2.2rem;
         font-weight: bold;
         color: white;
+        background-color: rgba(255, 255, 255, 0.2);
+        padding: 8px 18px;
+        border-radius: 8px;
+        display: inline-block;
+        margin-bottom: 8px;
     }
     .podium-name {
-        font-size: 1.2rem;
+        font-size: 1rem;
         font-weight: bold;
         color: white;
-        margin: 10px 0;
+        margin: 8px 0;
+        line-height: 1.2;
     }
     .podium-score {
-        font-size: 1.5rem;
+        font-size: 1.6rem;
+        font-weight: bold;
         color: white;
+        background-color: rgba(255, 255, 255, 0.2);
+        padding: 6px 14px;
+        border-radius: 8px;
+        display: inline-block;
+        margin: 8px 0;
+    }
+    .podium-label {
+        color: white;
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin-top: 8px;
+        padding: 5px 10px;
+        background-color: rgba(255, 255, 255, 0.15);
+        border-radius: 6px;
+        display: inline-block;
     }
     .rank-badge {
         font-size: 1.5rem;
@@ -61,54 +87,21 @@
 {% endblock %}
 
 {% block content %}
-<h2 class="mb-4 text-center"><i class="bi bi-trophy-fill text-warning"></i> Competition Results</h2>
+<h2 class="mb-4 text-center">{{ competition_title }} Results</h2>
 
 {% if not all_locked %}
     <div class="alert alert-warning">
-        <i class="bi bi-exclamation-triangle"></i> <strong>Note:</strong> Not all categories are locked yet. Results may change.
+        <strong>Note:</strong> Not all categories are locked yet. Results may change.
     </div>
 {% else %}
     <div class="alert alert-success">
-        <i class="bi bi-check-circle-fill"></i> <strong>Final Results:</strong> All categories are locked.
+        <strong>Final Results:</strong> All categories are locked.
     </div>
 {% endif %}
 
 {% if results %}
-    <!-- Top 3 Podium -->
-    {% if results|length >= 3 %}
-    <div class="podium">
-        <!-- 2nd Place -->
-        {% if results|length >= 2 %}
-        <div class="podium-place second-place">
-            <div class="podium-number">{{ results[1].contestant.number }}</div>
-            <div class="podium-name">{{ results[1].contestant.name }}</div>
-            <div class="podium-score">{{ "%.2f"|format(results[1].total_score) }}</div>
-            <div style="color: white; font-size: 1rem; margin-top: 10px;">2nd Place</div>
-        </div>
-        {% endif %}
-        
-        <!-- 1st Place -->
-        <div class="podium-place first-place">
-            <div class="podium-number">{{ results[0].contestant.number }}</div>
-            <div class="podium-name">{{ results[0].contestant.name }}</div>
-            <div class="podium-score">{{ "%.2f"|format(results[0].total_score) }}</div>
-            <div style="color: white; font-size: 1rem; margin-top: 10px;">🏆 WINNER 🏆</div>
-        </div>
-        
-        <!-- 3rd Place -->
-        {% if results|length >= 3 %}
-        <div class="podium-place third-place">
-            <div class="podium-number">{{ results[2].contestant.number }}</div>
-            <div class="podium-name">{{ results[2].contestant.name }}</div>
-            <div class="podium-score">{{ "%.2f"|format(results[2].total_score) }}</div>
-            <div style="color: white; font-size: 1rem; margin-top: 10px;">3rd Place</div>
-        </div>
-        {% endif %}
-    </div>
-    {% endif %}
-
     <!-- Detailed Results Table -->
-    <h3 class="mt-5 mb-3">Detailed Scores</h3>
+    <h3 class="mb-3">Rankings and Scores</h3>
     <div class="table-responsive">
         <table class="table table-striped table-hover">
             <thead class="table-dark">
@@ -127,11 +120,7 @@
                 <tr {% if result.rank <= 3 %}class="table-warning"{% endif %}>
                     <td>
                         <span class="rank-badge">
-                            {% if result.rank == 1 %}🥇
-                            {% elif result.rank == 2 %}🥈
-                            {% elif result.rank == 3 %}🥉
-                            {% else %}{{ result.rank }}
-                            {% endif %}
+                            {{ result.rank }}
                         </span>
                     </td>
                     <td><strong>{{ result.contestant.number }}</strong></td>
@@ -142,9 +131,6 @@
                             {{ "%.2f"|format(result.category_scores[category.name].weighted) }}
                             <br>
                             <small class="text-muted">({{ "%.2f"|format(result.category_scores[category.name].raw) }})</small>
-                            {% if result.category_scores[category.name].locked %}
-                                <i class="bi bi-lock-fill text-danger" title="Locked"></i>
-                            {% endif %}
                         {% else %}
                             -
                         {% endif %}
@@ -158,25 +144,62 @@
     </div>
 
     <div class="alert alert-info mt-4">
-        <h6><i class="bi bi-info-circle"></i> Score Breakdown:</h6>
+        <h6>Score Breakdown:</h6>
         <ul class="mb-0">
             <li><strong>Weighted Score:</strong> Main number (contributes to total based on category percentage)</li>
             <li><strong>Raw Score:</strong> Number in parentheses (actual category score before percentage applied)</li>
-            <li><i class="bi bi-lock-fill text-danger"></i> indicates the category is locked</li>
         </ul>
     </div>
+
+    {% if show_category_winners and category_winners %}
+    <div class="mt-5">
+        <h3 class="mb-3 text-center" style="color: #800020;"><i class="bi bi-trophy-fill"></i> Category Winners</h3>
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Category</th>
+                        <th>Winner</th>
+                        <th>Contestant #</th>
+                        <th>Category Score</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for category in categories %}
+                        {% if category.name in category_winners %}
+                        <tr class="table-warning">
+                            <td><strong>{{ category.name }}</strong></td>
+                            <td>
+                                <i class="bi bi-trophy-fill" style="color: #FFD700;"></i>
+                                <strong>{{ category_winners[category.name].contestant.name }}</strong>
+                            </td>
+                            <td><strong>{{ category_winners[category.name].contestant.number }}</strong></td>
+                            <td><strong style="color: #800020;">{{ "%.2f"|format(category_winners[category.name].score) }}</strong></td>
+                        </tr>
+                        {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
 {% else %}
     <div class="alert alert-info">
-        <i class="bi bi-info-circle"></i> No results available yet. Please add contestants, categories, and scores first.
+        No results available yet. Please add contestants, categories, and scores first.
     </div>
 {% endif %}
 
 <div class="mt-4 text-center">
+    {% if results %}
+    <a href="{{ url_for('download_results_pdf') }}" class="btn btn-danger" target="_blank">
+        <i class="bi bi-file-pdf"></i> Download PDF Copy
+    </a>
+    {% endif %}
     <a href="{{ url_for('index') }}" class="btn btn-primary">
-        <i class="bi bi-house"></i> Back to Home
+        Back to Home
     </a>
     <a href="{{ url_for('categories') }}" class="btn btn-secondary">
-        <i class="bi bi-list-task"></i> Manage Categories
+        Manage Categories
     </a>
 </div>
 {% endblock %}

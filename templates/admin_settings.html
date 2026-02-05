@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Settings - Pageant Scoring{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h2><i class="bi bi-gear"></i> Admin Settings</h2>
+    <p class="text-muted">Manage system settings and perform administrative tasks</p>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-pencil-square"></i> Competition Settings</h5>
+            </div>
+            <div class="card-body">
+                <h6 class="card-title">Edit Competition Details</h6>
+                <p class="card-text text-muted">
+                    Customize the competition title that appears on the public homepage, results page, and PDF reports. This allows you to use the system for different types of competitions.
+                </p>
+                <a href="{{ url_for('competition_settings') }}" class="btn btn-primary">
+                    <i class="bi bi-gear-fill"></i> Manage Competition Settings
+                </a>
+            </div>
+        </div>
+        
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="bi bi-trophy"></i> Results Display Settings</h5>
+            </div>
+            <div class="card-body">
+                <h6 class="card-title">Category Winners Display</h6>
+                <p class="card-text text-muted">
+                    Toggle whether to display the rank 1 winner of each category in the results page, shown below the final results table.
+                </p>
+                <form method="POST" action="{{ url_for('toggle_category_winners') }}">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="showCategoryWinners" 
+                            {% if show_category_winners %}checked{% endif %}
+                            onchange="this.form.submit()">
+                        <label class="form-check-label" for="showCategoryWinners">
+                            <strong>Show Category Winners</strong>
+                            <br><small class="text-muted">Display top contestant from each category</small>
+                        </label>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Danger Zone</h5>
+            </div>
+            <div class="card-body">
+                <h6 class="card-title">Reset Database</h6>
+                <p class="card-text text-muted">
+                    This action will permanently delete all data including:
+                </p>
+                <ul class="text-muted mb-3">
+                    <li>All categories and criteria</li>
+                    <li>All contestants</li>
+                    <li>All judges</li>
+                    <li>All scores</li>
+                </ul>
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle-fill"></i> <strong>Warning:</strong>  This feature is available in all environments. Use when you need to completely clear all data and start fresh.
+                </div>
+                <form method="POST" action="{{ url_for('reset_database') }}" onsubmit="return confirm('⚠️ FINAL WARNING ⚠️\n\nThis will DELETE ALL DATA from the database!\n\n• All categories and criteria will be removed\n• All contestants will be removed\n• All judges will be removed\n• All scores will be removed\n\nThis action is PERMANENT and CANNOT be undone!\n\nType YES in your mind and click OK only if you are absolutely certain.');">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash"></i> Reset Database
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-info-circle"></i> Information</h5>
+            </div>
+            <div class="card-body">
+                <h6>System Information</h6>
+                <ul class="list-unstyled">
+                    <li><strong>Admin User:</strong> {{ session.get('username', 'N/A') }}</li>
+                    <li><strong>Database:</strong> SQLite</li>
+                    <li><strong>Version:</strong> 1.0</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-shield-check"></i> Security</h5>
+            </div>
+            <div class="card-body">
+                <p class="small text-muted">
+                    This admin area is protected and requires authentication. Only authorized personnel should have access.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

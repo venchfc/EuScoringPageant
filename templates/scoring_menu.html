@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block title %}Scoring - Pageant Scoring{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Scoring Dashboard</h2>
+
+{% if contestants_count == 0 %}
+    <div class="alert alert-warning">
+        <i class="bi bi-exclamation-triangle"></i> <strong>No contestants found!</strong>
+        Please <a href="{{ url_for('add_contestant') }}" class="alert-link">add contestants</a> before scoring.
+    </div>
+{% elif judges_count == 0 %}
+    <div class="alert alert-warning">
+        <i class="bi bi-exclamation-triangle"></i> <strong>No judges found!</strong>
+        Please <a href="{{ url_for('add_judge') }}" class="alert-link">add judges</a> before scoring.
+    </div>
+{% elif not categories %}
+    <div class="alert alert-warning">
+        <i class="bi bi-exclamation-triangle"></i> <strong>No categories found!</strong>
+        Please <a href="{{ url_for('add_category') }}" class="alert-link">add categories</a> before scoring.
+    </div>
+{% else %}
+    <div class="alert alert-info mb-4">
+        <i class="bi bi-info-circle"></i> <strong>Total Contestants:</strong> {{ contestants_count }} | 
+        <strong>Judges:</strong> {{ judges_count }} | 
+        <strong>Categories:</strong> {{ categories|length }}
+    </div>
+
+    <div class="row">
+        {% for category in categories %}
+        <div class="col-md-6 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header {% if category.is_locked %}bg-secondary{% else %}bg-primary{% endif %} text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-{% if category.is_locked %}lock-fill{% else %}unlock-fill{% endif %}"></i>
+                        {{ category.name }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <strong>Category Weight:</strong> {{ category.percentage }}%<br>
+                        <strong>Criteria Defined:</strong> {{ category.criteria_count }}
+                        {% if category.criteria_count == 0 %}
+                            <span class="text-danger">
+                                <i class="bi bi-exclamation-circle"></i> No criteria
+                            </span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <strong>Status:</strong>
+                        {% if category.is_locked %}
+                            <span class="badge bg-secondary">
+                                <i class="bi bi-lock-fill"></i> Locked & Completed
+                            </span>
+                        {% else %}
+                            <span class="badge bg-success">
+                                <i class="bi bi-unlock-fill"></i> Ready for Scoring
+                            </span>
+                        {% endif %}
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        {% if not category.is_locked %}
+                            {% if category.ready %}
+                                <a href="{{ url_for('scoring', category_id=category.id) }}" class="btn btn-success">
+                                    <i class="bi bi-pencil-square"></i> Start Scoring
+                                </a>
+                            {% else %}
+                                <button class="btn btn-secondary" disabled>
+                                    <i class="bi bi-x-circle"></i> Not Ready
+                                </button>
+                            {% endif %}
+                        {% else %}
+                            <button class="btn btn-secondary" disabled>
+                                <i class="bi bi-check-circle"></i> Scoring Complete
+                            </button>
+                        {% endif %}
+                    </div>
+
+                    {% if not category.ready and not category.is_locked %}
+                        <div class="alert alert-warning mt-3 mb-0">
+                            <small>
+                                <i class="bi bi-info-circle"></i>
+                                {% if category.criteria_count == 0 %}
+                                    Add criteria to this category first.
+                                {% elif contestants_count == 0 %}
+                                    Add contestants first.
+                                {% elif judges_count == 0 %}
+                                    Add judges first.
+                                {% endif %}
+                            </small>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="alert alert-info mt-4">
+        <h6>Workflow Guide:</h6>
+        <ol class="mb-0">
+            <li><strong>Judges:</strong> Add all judges who will score</li>
+            <li><strong>Score:</strong> Click "Start Scoring" on each category</li>
+            <li><strong>Note:</strong> Each judge scores independently - select judge first, then enter scores</li>
+            <li><strong>Lock:</strong> Click "Save & Lock Category" when all judges have scored
+            <li><strong>Score:</strong> Click "Start Scoring" on each category</li>
+            <li><strong>Lock:</strong> Click "Save & Lock Category" when done to finalize scores</li>
+            <li><strong>Results:</strong> View final results once all categories are locked</li>
+        </ol>
+    </div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Login - Pageant Scoring{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-5">
+        <div class="card shadow">
+            <div class="card-body p-5">
+                <h2 class="text-center mb-4">Admin Login</h2>
+                <p class="text-center text-muted mb-4">Enter credentials to access setup</p>
+                
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Username</label>
+                        <input type="text" class="form-control" id="username" name="username" 
+                               required autofocus placeholder="Enter username">
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="password" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="password" name="password" 
+                               required placeholder="Enter password">
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary w-100">
+                        Login
+                    </button>
+                </form>
+                
+                <div class="text-center mt-4">
+                    <a href="{{ url_for('index') }}" class="text-muted">Back to Home</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="alert alert-info mt-4">
+            <strong>Note:</strong> Admin login is required to access:
+            <ul class="mb-0 mt-2">
+                <li>Categories Management</li>
+                <li>Contestants Management</li>
+                <li>Judges Management</li>
+            </ul>
+            <small class="d-block mt-2 text-muted">Scoring and Results remain accessible to all.</small>
+        </div>
+    </div>
+</div>
+{% endblock %}
