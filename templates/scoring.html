@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+
+{% block title %}Scoring - {{ category.name }}{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{{ url_for('categories') }}">Categories</a></li>
+        <li class="breadcrumb-item active">Scoring - {{ category.name }}</li>
+    </ol>
+</nav>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-pencil-square"></i> Scoring: {{ category.name }}</h2>
+    <div>
+        <button onclick="saveScores()" class="btn btn-success me-2">
+            <i class="bi bi-save"></i> Save Scores
+        </button>
+        <button onclick="lockCategory()" class="btn btn-danger">
+            <i class="bi bi-lock-fill"></i> Save & Lock Category
+        </button>
+    </div>
+</div>
+
+<div class="alert alert-warning">
+    <i class="bi bi-exclamation-triangle"></i> <strong>Warning:</strong> Once you lock this category, scores cannot be changed!
+</div>
+
+{% if criteria %}
+    <div class="table-responsive">
+        <table class="table table-bordered">
+            <thead class="table-dark">
+                <tr>
+                    <th>Contestant #</th>
+                    <th>Name</th>
+                    {% for criterion in criteria %}
+                    <th>{{ criterion.name }}<br><small>({{ criterion.percentage }}%)</small></th>
+                    {% endfor %}
+                    <th>Category Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for contestant in contestants %}
+                <tr>
+                    <td class="text-center"><strong>{{ contestant.number }}</strong></td>
+                    <td><strong>{{ contestant.name }}</strong></td>
+                    {% for criterion in criteria %}
+                    <td>
+                        <input type="number" 
+                               class="form-control score-input" 
+                               data-contestant="{{ contestant.id }}" 
+                               data-criteria="{{ criterion.id }}"
+                               min="0" 
+                               max="100" 
+                               step="0.01"
+                               value="{{ existing_scores.get(contestant.id ~ '_' ~ criterion.id, '') }}"
+                               placeholder="0-100">
+                    </td>
+                    {% endfor %}
+                    <td class="text-center">
+                        <strong class="contestant-total" data-contestant="{{ contestant.id }}">0.00</strong>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    <div class="alert alert-danger">
+        <i class="bi bi-exclamation-triangle"></i> No criteria defined for this category. 
+        <a href="{{ url_for('manage_criteria', category_id=category.id) }}" class="alert-link">Add criteria first</a>.
+    </div>
+{% endif %}
+
+<div class="mt-4">
+    <a href="{{ url_for('categories') }}" class="btn btn-secondary">
+        <i class="bi bi-arrow-left"></i> Back to Categories
+    </a>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script type="application/json" id="page-data">
+{
+    "categoryId": {{ category.id|tojson }},
+    "criteriaPercentages": {{ dict((c.id, c.percentage) for c in criteria)|tojson }}
+}
+</script>
+<script>
+const pageData = JSON.parse(document.getElementById('page-data').textContent);
+const categoryId = pageData.categoryId;
+const criteriaPercentages = pageData.criteriaPercentages;
+
+// Calculate totals when scores change
+document.querySelectorAll('.score-input').forEach(input => {
+    input.addEventListener('input', calculateTotals);
+});
+
+function calculateTotals() {
+    const contestants = new Set();
+    document.querySelectorAll('.score-input').forEach(input => {
+        contestants.add(input.dataset.contestant);
+    });
+    
+    contestants.forEach(contestantId => {
+        let total = 0;
+        document.querySelectorAll(`.score-input[data-contestant="${contestantId}"]`).forEach(input => {
+            const score = parseFloat(input.value) || 0;
+            const criteriaId = input.dataset.criteria;
+            const percentage = criteriaPercentages[criteriaId] / 100;
+            total += score * percentage;
+        });
+        
+        const totalElement = document.querySelector(`.contestant-total[data-contestant="${contestantId}"]`);
+        totalElement.textContent = total.toFixed(2);
+    });
+}
+
+// Initial calculation
+calculateTotals();
+
+function saveScores() {
+    const scores = [];
+    document.querySelectorAll('.score-input').forEach(input => {
+        const score = parseFloat(input.value);
+        if (score || score === 0) {
+            scores.push({
+                contestant_id: parseInt(input.dataset.contestant),
+                criteria_id: parseInt(input.dataset.criteria),
+                score: score
+            });
+        }
+    });
+    
+    fetch(`/scoring/${categoryId}/save`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ scores: scores })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Scores saved successfully!');
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        alert('Error saving scores: ' + error);
+    });
+}
+
+function lockCategory() {
+    if (!confirm('Are you sure you want to LOCK this category? This action is IRREVERSIBLE!')) {
+        return;
+    }
+    
+    // First save the scores
+    const scores = [];
+    document.querySelectorAll('.score-input').forEach(input => {
+        const score = parseFloat(input.value);
+        if (score || score === 0) {
+            scores.push({
+                contestant_id: parseInt(input.dataset.contestant),
+                criteria_id: parseInt(input.dataset.criteria),
+                score: score
+            });
+        }
+    });
+    
+    // Save scores first
+    fetch(`/scoring/${categoryId}/save`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ scores: scores })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (!data.success) {
+            throw new Error(data.message);
+        }
+        
+        // Then lock the category
+        return fetch(`/category/${categoryId}/lock`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Category locked successfully!');
+            window.location.href = '/categories';
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        alert('Error: ' + error);
+    });
+}
+</script>
+{% endblock %}

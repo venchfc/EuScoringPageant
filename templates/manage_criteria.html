@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Criteria - {{ category.name }}{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{{ url_for('categories') }}">Categories</a></li>
+        <li class="breadcrumb-item active">{{ category.name }}</li>
+    </ol>
+</nav>
+
+<h2 class="mb-4"><i class="bi bi-gear"></i> Criteria for "{{ category.name }}"</h2>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <i class="bi bi-plus-circle"></i> Add New Criteria
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Criteria Name</label>
+                        <input type="text" class="form-control" id="name" name="name" required
+                               placeholder="e.g., Poise, Presentation, Confidence">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="percentage" class="form-label">Percentage Weight</label>
+                        <input type="number" class="form-control" id="percentage" name="percentage"
+                               min="0" max="100" step="0.01" required placeholder="e.g., 33.33">
+                        <div class="form-text">Weight within this category (should total 100%)</div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save"></i> Add Criteria
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-secondary text-white">
+                <i class="bi bi-list-check"></i> Current Criteria
+            </div>
+            <div class="card-body">
+                {% if criteria %}
+                    <div class="list-group">
+                        {% for criterion in criteria %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>{{ criterion.name }}</strong>
+                                <br>
+                                <small class="text-muted">Order: {{ criterion.order }}</small>
+                            </div>
+                            <span class="badge bg-primary rounded-pill">{{ criterion.percentage }}%</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="alert alert-info mt-3 mb-0">
+                        <strong>Total:</strong> {{ criteria|sum(attribute='percentage') }}%
+                        {% if criteria|sum(attribute='percentage') != 100 %}
+                            <span class="text-warning">
+                                <i class="bi bi-exclamation-triangle"></i> Should be 100%
+                            </span>
+                        {% else %}
+                            <span class="text-success">
+                                <i class="bi bi-check-circle"></i> Perfect!
+                            </span>
+                        {% endif %}
+                    </div>
+                {% else %}
+                    <p class="text-muted mb-0">No criteria added yet. Add your first criteria using the form.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mt-4">
+    <a href="{{ url_for('categories') }}" class="btn btn-secondary">
+        <i class="bi bi-arrow-left"></i> Back to Categories
+    </a>
+</div>
+
+<div class="alert alert-info mt-4">
+    <h6><i class="bi bi-lightbulb"></i> Example Criteria for Evening Gown:</h6>
+    <ul class="mb-0">
+        <li><strong>Poise & Confidence</strong> - 33.33%</li>
+        <li><strong>Stage Presence</strong> - 33.33%</li>
+        <li><strong>Overall Presentation</strong> - 33.34%</li>
+    </ul>
+</div>
+{% endblock %}

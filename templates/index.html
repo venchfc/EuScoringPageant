@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="text-center">
+    <h1 class="display-4 mb-4"><i class="bi bi-trophy-fill text-warning"></i> Pageant Scoring System</h1>
+    <p class="lead mb-5">Professional scoring system for pageant competitions</p>
+    
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="bi bi-list-task display-1 mb-3" style="color: #800020;"></i>
+                    <h5 class="card-title">Categories</h5>
+                    <p class="card-text">Manage competition categories and criteria</p>
+                    <a href="{{ url_for('categories') }}" class="btn btn-primary">Manage Categories</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="bi bi-people display-1 mb-3" style="color: #800020;"></i>
+                    <h5 class="card-title">Contestants</h5>
+                    <p class="card-text">Add and manage pageant contestants</p>
+                    <a href="{{ url_for('contestants') }}" class="btn btn-primary">Manage Contestants</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="bi bi-bar-chart display-1 mb-3" style="color: #800020;"></i>
+                    <h5 class="card-title">Results</h5>
+                    <p class="card-text">View rankings and final scores</p>
+                    <a href="{{ url_for('results') }}" class="btn btn-primary">View Results</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-5">
+        <h3>Quick Start Guide</h3>
+        <ol class="text-start mt-3">
+            <li>Add competition <strong>Categories</strong> (e.g., Evening Gown, Swimsuit) with percentages</li>
+            <li>Add <strong>Criteria</strong> for each category (e.g., Poise, Presentation) with percentages</li>
+            <li>Add <strong>Contestants</strong> with their names and numbers</li>
+            <li>Enter <strong>Scores</strong> for each category</li>
+            <li><strong>Lock</strong> each category when scoring is complete (irreversible!)</li>
+            <li>View <strong>Results</strong> with rankings when all categories are locked</li>
+        </ol>
+    </div>
+
+    <div class="mt-4">
+        <small class="text-muted">
+            <form method="POST" action="{{ url_for('reset_database') }}" onsubmit="return confirm('Are you sure you want to reset all data? This cannot be undone!');">
+                <button type="submit" class="btn btn-sm btn-outline-danger">
+                    <i class="bi bi-exclamation-triangle"></i> Reset Database (Dev Only)
+                </button>
+            </form>
+        </small>
+    </div>
+</div>
+{% endblock %}
