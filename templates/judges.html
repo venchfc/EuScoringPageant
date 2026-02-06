@@ -16,7 +16,7 @@
         <div class="col-md-4 mb-3">
             <div class="card h-100 shadow-sm">
                 <div class="card-body text-center">
-                    <div class="display-4 mb-2" style="color: #800020;">{{ judge.number }}</div>
+                    <div class="display-4 mb-2" style="color: #800000;">{{ judge.number }}</div>
                     <h5 class="card-title">{{ judge.name }}</h5>
                     <small class="text-muted">
                         Added: {{ judge.created_at.strftime('%Y-%m-%d') }}
@@ -25,7 +25,7 @@
                         <a href="{{ url_for('edit_judge', judge_id=judge.id) }}" class="btn btn-sm btn-warning">
                             <i class="bi bi-pencil"></i> Edit
                         </a>
-                        <button onclick="deleteJudge({{ judge.id }}, {{ judge.number }}, '{{ judge.name }}')" class="btn btn-sm btn-danger">
+                        <button onclick="deleteJudge({{ judge.id }}, {{ judge.number }}, '{{ judge.name }}')" class="btn btn-sm btn-primary">
                             <i class="bi bi-trash"></i> Delete
                         </button>
                     </div>

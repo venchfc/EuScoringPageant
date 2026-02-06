@@ -4,9 +4,10 @@ from datetime import datetime
 from functools import wraps
 import os
 from io import BytesIO
+from werkzeug.security import check_password_hash, generate_password_hash
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter, A4
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
 from reportlab.lib.enums import TA_CENTER
@@ -16,9 +17,9 @@ app.config['SECRET_KEY'] = 'your-secret-key-change-this'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///pageant.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# Admin credentials (change these for production)
-ADMIN_USERNAME = 'admin'
-ADMIN_PASSWORD = 'adminITD2026'
+# Default admin credentials (override with environment variables)
+DEFAULT_ADMIN_USERNAME = os.getenv('ADMIN_USERNAME', 'admin')
+DEFAULT_ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', 'adminITD2026')
 
 db = SQLAlchemy(app)
 
@@ -33,6 +34,19 @@ def login_required(f):
     return decorated_function
 
 # Models
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    password_hash = db.Column(db.String(255), nullable=False)
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
+
 class Category(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
@@ -80,6 +94,20 @@ class Settings(db.Model):
     show_category_winners = db.Column(db.Boolean, default=False)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
+# Ensure there is at least one admin user
+def ensure_default_admin():
+    if User.query.first() is None:
+        admin_user = User(username=DEFAULT_ADMIN_USERNAME)
+        admin_user.set_password(DEFAULT_ADMIN_PASSWORD)
+        db.session.add(admin_user)
+        db.session.commit()
+
+def get_current_user():
+    user_id = session.get('user_id')
+    if not user_id:
+        return None
+    return User.query.get(user_id)
+
 # Context processor to make competition title available to all templates
 @app.context_processor
 def inject_competition_title():
@@ -96,10 +124,14 @@ def login():
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
-        
-        if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
+
+        ensure_default_admin()
+        user = User.query.filter_by(username=username).first()
+
+        if user and user.is_active and user.check_password(password):
             session['logged_in'] = True
             session['username'] = username
+            session['user_id'] = user.id
             flash('Login successful!', 'success')
             
             # Redirect to next page or index
@@ -115,6 +147,97 @@ def logout():
     session.clear()
     flash('You have been logged out.', 'success')
     return redirect(url_for('index'))
+
+@app.route('/admin/users')
+@login_required
+def admin_users():
+    ensure_default_admin()
+    users = User.query.order_by(User.username.asc()).all()
+    return render_template('admin_users.html', users=users)
+
+@app.route('/admin/users/create', methods=['POST'])
+@login_required
+def admin_users_create():
+    ensure_default_admin()
+    username = request.form.get('username', '').strip()
+    password = request.form.get('password', '')
+
+    if not username or not password:
+        flash('Username and password are required.', 'error')
+        return redirect(url_for('admin_users'))
+
+    if User.query.filter_by(username=username).first():
+        flash('Username already exists.', 'error')
+        return redirect(url_for('admin_users'))
+
+    user = User(username=username)
+    user.set_password(password)
+    db.session.add(user)
+    db.session.commit()
+    flash('User created successfully.', 'success')
+    return redirect(url_for('admin_users'))
+
+@app.route('/admin/users/<int:user_id>/reset', methods=['POST'])
+@login_required
+def admin_users_reset(user_id):
+    ensure_default_admin()
+    new_password = request.form.get('new_password', '')
+    if not new_password:
+        flash('New password is required.', 'error')
+        return redirect(url_for('admin_users'))
+
+    user = User.query.get_or_404(user_id)
+    user.set_password(new_password)
+    db.session.commit()
+    flash('Password reset successfully.', 'success')
+    return redirect(url_for('admin_users'))
+
+@app.route('/admin/users/<int:user_id>/toggle', methods=['POST'])
+@login_required
+def admin_users_toggle(user_id):
+    ensure_default_admin()
+    current_user = get_current_user()
+    if current_user and current_user.id == user_id:
+        flash('You cannot deactivate your own account.', 'error')
+        return redirect(url_for('admin_users'))
+
+    user = User.query.get_or_404(user_id)
+    user.is_active = not user.is_active
+    db.session.commit()
+    flash('User status updated.', 'success')
+    return redirect(url_for('admin_users'))
+
+@app.route('/admin/password', methods=['GET', 'POST'])
+@login_required
+def change_password():
+    user = get_current_user()
+    if not user:
+        flash('User not found.', 'error')
+        return redirect(url_for('admin_settings'))
+
+    if request.method == 'POST':
+        current_password = request.form.get('current_password', '')
+        new_password = request.form.get('new_password', '')
+        confirm_password = request.form.get('confirm_password', '')
+
+        if not current_password or not new_password or not confirm_password:
+            flash('All password fields are required.', 'error')
+            return redirect(url_for('change_password'))
+
+        if not user.check_password(current_password):
+            flash('Current password is incorrect.', 'error')
+            return redirect(url_for('change_password'))
+
+        if new_password != confirm_password:
+            flash('New passwords do not match.', 'error')
+            return redirect(url_for('change_password'))
+
+        user.set_password(new_password)
+        db.session.commit()
+        flash('Password updated successfully.', 'success')
+        return redirect(url_for('admin_settings'))
+
+    return render_template('change_password.html')
 
 @app.route('/')
 def index():
@@ -667,13 +790,52 @@ def download_results_pdf():
     elements = []
     styles = getSampleStyleSheet()
     
+    # Header with logo and university name
+    logo_path = os.path.join('static', 'images', 'MseufCatLogo.png')
+    
+    # Create header table with logo and university name
+    header_data = []
+    header_row = []
+    
+    # Add logo if it exists
+    if os.path.exists(logo_path):
+        logo = Image(logo_path, width=0.8*inch, height=0.8*inch)
+        header_row.append(logo)
+    else:
+        header_row.append('')
+    
+    # University name
+    university_style = ParagraphStyle(
+        'University',
+        parent=styles['Normal'],
+        fontSize=12,
+        alignment=TA_CENTER,
+        spaceAfter=5
+    )
+    university_text = Paragraph("Manuel S. Enverga University Foundation - Catanauan Inc", university_style)
+    header_row.append(university_text)
+    
+    # Add empty cell for right side to balance
+    header_row.append('')
+    
+    header_data.append(header_row)
+    header_table = Table(header_data, colWidths=[1*inch, 4.5*inch, 1*inch])
+    header_table.setStyle(TableStyle([
+        ('ALIGN', (0, 0), (0, 0), 'LEFT'),
+        ('ALIGN', (1, 0), (1, 0), 'CENTER'),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+    ]))
+    
+    elements.append(header_table)
+    elements.append(Spacer(1, 10))
+    
     # Title
     title_style = ParagraphStyle(
         'CustomTitle',
         parent=styles['Heading1'],
         fontSize=18,
-        textColor=colors.HexColor('#800000'),
-        spaceAfter=30,
+        textColor=colors.maroon,
+        spaceAfter=5,
         alignment=TA_CENTER,
         fontName='Helvetica-Bold'
     )
@@ -682,26 +844,25 @@ def download_results_pdf():
     title = Paragraph(title_text, title_style)
     elements.append(title)
     
-    subtitle_style = ParagraphStyle(
-        'Subtitle',
-        parent=styles['Normal'],
-        fontSize=11,
+    elements.append(Spacer(1, 20))
+    
+    # Add FINAL RESULTS header
+    final_results_style = ParagraphStyle(
+        'FinalResults',
+        parent=styles['Heading2'],
+        fontSize=14,
+        textColor=colors.black,
+        spaceAfter=15,
         alignment=TA_CENTER,
-        spaceAfter=5
+        fontName='Helvetica-Bold'
     )
     
-    subtitle = Paragraph("Manuel S. Enverga University Foundation - Catanauan Inc", subtitle_style)
-    elements.append(subtitle)
-    
-    status_text = "<b>FINAL RESULTS - All Categories Locked</b>" if all_locked else "Preliminary Results - Not All Categories Locked"
-    status = Paragraph(status_text, subtitle_style)
-    elements.append(status)
-    
-    elements.append(Spacer(1, 20))
+    final_results_header = Paragraph("<b>FINAL RESULTS</b>", final_results_style)
+    elements.append(final_results_header)
     
     # Create table data
     table_data = []
-    header_row = ['Rank', 'No.', 'Name']
+    header_row = ['Rank', 'Contestant No.', 'Name']
     
     # Add category headers
     for category in categories:
@@ -732,28 +893,16 @@ def download_results_pdf():
     # Create table
     table = Table(table_data)
     
-    # Style the table
+    # Style the table - simple black and white
     table_style = TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#800000')),
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
         ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
         ('FONTSIZE', (0, 0), (-1, 0), 9),
         ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
         ('GRID', (0, 0), (-1, -1), 1, colors.black),
         ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
         ('FONTSIZE', (0, 1), (-1, -1), 8),
-        ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.lightgrey]),
     ])
-    
-    # Highlight top 3
-    if len(results_data) >= 1:
-        table_style.add('BACKGROUND', (0, 1), (-1, 1), colors.HexColor('#FFD700'))  # Gold
-    if len(results_data) >= 2:
-        table_style.add('BACKGROUND', (0, 2), (-1, 2), colors.HexColor('#C0C0C0'))  # Silver
-    if len(results_data) >= 3:
-        table_style.add('BACKGROUND', (0, 3), (-1, 3), colors.HexColor('#CD7F32'))  # Bronze
     
     table.setStyle(table_style)
     elements.append(table)
@@ -789,7 +938,7 @@ def download_results_pdf():
                 'WinnerTitle',
                 parent=styles['Heading2'],
                 fontSize=14,
-                textColor=colors.HexColor('#800000'),
+                textColor=colors.black,
                 spaceAfter=15,
                 alignment=TA_CENTER,
                 fontName='Helvetica-Bold'
@@ -814,17 +963,13 @@ def download_results_pdf():
             winner_table = Table(winner_data, colWidths=[2*inch, 2.5*inch, 1*inch, 1*inch])
             
             winner_table_style = TableStyle([
-                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#800000')),
-                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
                 ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
                 ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
                 ('FONTSIZE', (0, 0), (-1, 0), 10),
                 ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-                ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
                 ('GRID', (0, 0), (-1, -1), 1, colors.black),
                 ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
                 ('FONTSIZE', (0, 1), (-1, -1), 9),
-                ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.HexColor('#FFF8DC'), colors.HexColor('#FFFACD')]),
             ])
             
             winner_table.setStyle(winner_table_style)
@@ -842,6 +987,20 @@ def download_results_pdf():
     
     legend = Paragraph("<b>Score Breakdown:</b> Weighted Score (Raw Score) - Raw scores shown in parentheses", legend_style)
     elements.append(legend)
+    
+    elements.append(Spacer(1, 20))
+    
+    # Footer credit
+    footer_style = ParagraphStyle(
+        'Footer',
+        parent=styles['Normal'],
+        fontSize=8,
+        alignment=TA_CENTER,
+        textColor=colors.grey
+    )
+    
+    footer = Paragraph("Developed by MSEUF Catanauan | Information Technology Department", footer_style)
+    elements.append(footer)
     
     # Build PDF
     doc.build(elements)

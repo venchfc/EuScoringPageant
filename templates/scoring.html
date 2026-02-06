@@ -22,7 +22,7 @@
     </div>
 </div>
 
-<div class="alert mb-3" style="background-color: #f8e8eb; border-left: 4px solid #800000; color: #333;">
+<div class="alert mb-3" style="background-color: #ffffff; border-left: 4px solid #800000; color: #800000;">
     <i class="bi bi-person-badge"></i> <strong>Select Judge:</strong>
     <select id="judgeSelect" class="form-select d-inline-block ms-2" style="width: 350px;" onchange="loadJudgeScores()">
         <option value="">-- Select a Judge --</option>
@@ -32,8 +32,8 @@
     </select>
 </div>
 
-<div class="alert" style="background-color: #fff3e6; border-left: 4px solid #d35400; color: #8b4000;">
-    <strong style="color: #d35400;">Warning:</strong> Once you lock this category, scores cannot be changed! All {{ judges|length }} judges must complete scoring first.
+<div class="alert" style="background-color: #ffffff; border-left: 4px solid #FF6600; color: #FF6600;">
+    <strong style="color: #FF6600;">Warning:</strong> Once you lock this category, scores cannot be changed! All {{ judges|length }} judges must complete scoring first.
 </div>
 
 {% if criteria %}

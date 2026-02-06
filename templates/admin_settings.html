@@ -24,9 +24,24 @@
                 </a>
             </div>
         </div>
+
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-person-gear"></i> Admin Users</h5>
+            </div>
+            <div class="card-body">
+                <h6 class="card-title">Manage Admin Accounts</h6>
+                <p class="card-text text-muted">
+                    Create new admin users, reset passwords, or disable access for former staff.
+                </p>
+                <a href="{{ url_for('admin_users') }}" class="btn btn-primary">
+                    <i class="bi bi-people"></i> Manage Admin Users
+                </a>
+            </div>
+        </div>
         
         <div class="card mb-4">
-            <div class="card-header bg-info text-white">
+            <div class="card-header bg-primary text-white">
                 <h5 class="mb-0"><i class="bi bi-trophy"></i> Results Display Settings</h5>
             </div>
             <div class="card-body">
@@ -49,8 +64,8 @@
         </div>
         
         <div class="card">
-            <div class="card-header bg-danger text-white">
-                <h5 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Danger Zone</h5>
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Reset</h5>
             </div>
             <div class="card-body">
                 <h6 class="card-title">Reset Database</h6>
@@ -67,7 +82,7 @@
                     <i class="bi bi-exclamation-triangle-fill"></i> <strong>Warning:</strong>  This feature is available in all environments. Use when you need to completely clear all data and start fresh.
                 </div>
                 <form method="POST" action="{{ url_for('reset_database') }}" onsubmit="return confirm('⚠️ FINAL WARNING ⚠️\n\nThis will DELETE ALL DATA from the database!\n\n• All categories and criteria will be removed\n• All contestants will be removed\n• All judges will be removed\n• All scores will be removed\n\nThis action is PERMANENT and CANNOT be undone!\n\nType YES in your mind and click OK only if you are absolutely certain.');">
-                    <button type="submit" class="btn btn-danger">
+                    <button type="submit" class="btn btn-primary">
                         <i class="bi bi-trash"></i> Reset Database
                     </button>
                 </form>
@@ -77,7 +92,7 @@
     
     <div class="col-md-4">
         <div class="card">
-            <div class="card-header">
+            <div class="card-header bg-primary text-white">
                 <h5 class="mb-0"><i class="bi bi-info-circle"></i> Information</h5>
             </div>
             <div class="card-body">
@@ -91,13 +106,16 @@
         </div>
         
         <div class="card mt-3">
-            <div class="card-header">
+            <div class="card-header bg-primary text-white">
                 <h5 class="mb-0"><i class="bi bi-shield-check"></i> Security</h5>
             </div>
             <div class="card-body">
                 <p class="small text-muted">
                     This admin area is protected and requires authentication. Only authorized personnel should have access.
                 </p>
+                <a href="{{ url_for('change_password') }}" class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-key"></i> Change Password
+                </a>
             </div>
         </div>
     </div>
