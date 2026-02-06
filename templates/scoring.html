@@ -43,6 +43,7 @@
                 <thead class="table-dark">
                     <tr>
                         <th>Contestant #</th>
+                        <th>Division</th>
                         <th>Name</th>
                         {% for criterion in criteria %}
                         <th>{{ criterion.name }}<br><small>({{ criterion.percentage }}%)</small></th>
@@ -54,6 +55,7 @@
                     {% for contestant in contestants %}
                     <tr>
                         <td class="text-center"><strong>{{ contestant.number }}</strong></td>
+                        <td class="text-center"><strong>{{ contestant.division|title }}</strong></td>
                         <td><strong>{{ contestant.name }}</strong></td>
                         {% for criterion in criteria %}
                         <td>

@@ -17,6 +17,7 @@
                 <tr>
                     <th>Order</th>
                     <th>Category Name</th>
+                    <th>Round</th>
                     <th>Percentage</th>
                     <th>Status</th>
                     <th>Criteria</th>
@@ -28,6 +29,15 @@
                 <tr>
                     <td>{{ category.order }}</td>
                     <td><strong>{{ category.name }}</strong></td>
+                    <td>
+                        {% if category.round == 'round2' %}
+                            Top 5
+                        {% elif category.round == 'round3' %}
+                            Top 3
+                        {% else %}
+                            Round 1
+                        {% endif %}
+                    </td>
                     <td>{{ category.percentage }}%</td>
                     <td>
                         {% if category.is_locked %}
@@ -60,8 +70,8 @@
     </div>
     
     <div class="alert alert-info mt-4">
-        <strong>Note:</strong> Total percentage should add up to 100%. 
-        Current total: <strong>{{ categories|sum(attribute='percentage') }}%</strong>
+        <strong>Note:</strong> Round 1 total percentage should add up to 100%.
+        Current total: <strong>{{ round1_total }}%</strong>
     </div>
 {% else %}
     <div class="alert alert-warning">

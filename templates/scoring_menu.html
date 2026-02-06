@@ -15,7 +15,7 @@
         <i class="bi bi-exclamation-triangle"></i> <strong>No judges found!</strong>
         Please <a href="{{ url_for('add_judge') }}" class="alert-link">add judges</a> before scoring.
     </div>
-{% elif not categories %}
+{% elif not (round1_categories or round2_categories or round3_categories) %}
     <div class="alert alert-warning">
         <i class="bi bi-exclamation-triangle"></i> <strong>No categories found!</strong>
         Please <a href="{{ url_for('add_category') }}" class="alert-link">add categories</a> before scoring.
@@ -24,11 +24,12 @@
     <div class="alert alert-info mb-4">
         <i class="bi bi-info-circle"></i> <strong>Total Contestants:</strong> {{ contestants_count }} | 
         <strong>Judges:</strong> {{ judges_count }} | 
-        <strong>Categories:</strong> {{ categories|length }}
+        <strong>Round 1:</strong> {{ round1_categories|length }} | 
+        <strong>Round 2:</strong> {{ round2_categories|length }} | 
+        <strong>Round 3:</strong> {{ round3_categories|length }}
     </div>
 
-    <div class="row">
-        {% for category in categories %}
+    {% macro render_category_card(category) %}
         <div class="col-md-6 mb-4">
             <div class="card h-100 shadow-sm">
                 <div class="card-header {% if category.is_locked %}bg-secondary{% else %}bg-primary{% endif %} text-white">
@@ -61,7 +62,7 @@
                         {% endif %}
                     </div>
 
-                    <div class="d-flex gap-2">
+                    <div class="d-flex gap-2 flex-wrap">
                         {% if not category.is_locked %}
                             {% if category.ready %}
                                 <a href="{{ url_for('scoring', category_id=category.id) }}" class="btn btn-success">
@@ -96,7 +97,42 @@
                 </div>
             </div>
         </div>
+    {% endmacro %}
+
+    <h4 class="mb-3">Round 1</h4>
+    <div class="row">
+        {% for category in round1_categories %}
+            {{ render_category_card(category) }}
         {% endfor %}
+        {% if not round1_categories %}
+            <div class="col-12 mb-4">
+                <div class="alert alert-warning">No Round 1 categories yet.</div>
+            </div>
+        {% endif %}
+    </div>
+
+    <h4 class="mb-3 mt-4">Round 2 (Top 5)</h4>
+    <div class="row">
+        {% for category in round2_categories %}
+            {{ render_category_card(category) }}
+        {% endfor %}
+        {% if not round2_categories %}
+            <div class="col-12 mb-4">
+                <div class="alert alert-warning">No Round 2 category yet.</div>
+            </div>
+        {% endif %}
+    </div>
+
+    <h4 class="mb-3 mt-4">Round 3 (Top 3)</h4>
+    <div class="row">
+        {% for category in round3_categories %}
+            {{ render_category_card(category) }}
+        {% endfor %}
+        {% if not round3_categories %}
+            <div class="col-12 mb-4">
+                <div class="alert alert-warning">No Round 3 category yet.</div>
+            </div>
+        {% endif %}
     </div>
 
     <div class="alert alert-info mt-4">

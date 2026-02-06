@@ -99,7 +99,7 @@
                 <h6>System Information</h6>
                 <ul class="list-unstyled">
                     <li><strong>Admin User:</strong> {{ session.get('username', 'N/A') }}</li>
-                    <li><strong>Database:</strong> SQLite</li>
+                    
                     <li><strong>Version:</strong> 1.0</li>
                 </ul>
             </div>
@@ -115,6 +115,20 @@
                 </p>
                 <a href="{{ url_for('change_password') }}" class="btn btn-outline-primary btn-sm">
                     <i class="bi bi-key"></i> Change Password
+                </a>
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-clock-history"></i> Audit Logs</h5>
+            </div>
+            <div class="card-body">
+                <p class="small text-muted">
+                    View login attempts, score submissions, and category locks with timestamps.
+                </p>
+                <a href="{{ url_for('admin_logs') }}" class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-list-ul"></i> View Logs
                 </a>
             </div>
         </div>

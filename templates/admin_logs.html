@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block title %}Audit Logs - Pageant Scoring{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Audit Logs</h2>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('admin_logs_csv', **filters) }}" class="btn btn-outline-primary btn-sm">Export CSV</a>
+        <a href="{{ url_for('admin_logs_pdf', **filters) }}" class="btn btn-outline-primary btn-sm">Export PDF</a>
+        <a href="{{ url_for('admin_settings') }}" class="btn btn-outline-primary btn-sm">Back to Settings</a>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0"><i class="bi bi-funnel"></i> Filter Logs</h5>
+    </div>
+    <div class="card-body">
+        <form method="GET" action="{{ url_for('admin_logs') }}" class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label" for="filterUser">User</label>
+                <select class="form-select" id="filterUser" name="username">
+                    <option value="">All</option>
+                    {% for name in usernames %}
+                    <option value="{{ name }}" {% if filters.username == name %}selected{% endif %}>{{ name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label" for="filterAction">Action</label>
+                <select class="form-select" id="filterAction" name="action">
+                    <option value="">All</option>
+                    {% for action in actions %}
+                    <option value="{{ action }}" {% if filters.action == action %}selected{% endif %}>{{ action }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label" for="filterStart">Start Date</label>
+                <input type="date" class="form-control" id="filterStart" name="start_date" value="{{ filters.start_date }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label" for="filterEnd">End Date</label>
+                <input type="date" class="form-control" id="filterEnd" name="end_date" value="{{ filters.end_date }}">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label" for="filterSearch">Search</label>
+                <input type="text" class="form-control" id="filterSearch" name="q" placeholder="Search username, action, details" value="{{ filters.q }}">
+            </div>
+            <div class="col-md-6 d-flex align-items-end gap-2">
+                <button type="submit" class="btn btn-primary">Apply Filters</button>
+                <a href="{{ url_for('admin_logs') }}" class="btn btn-outline-secondary">Reset</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0"><i class="bi bi-clock-history"></i> Recent Activity</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Time</th>
+                        <th>User</th>
+                        <th>Action</th>
+                        <th>Details</th>
+                        <th>IP</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in logs %}
+                    <tr>
+                        <td>{{ log.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                        <td>{{ log.username }}</td>
+                        <td><strong>{{ log.action }}</strong></td>
+                        <td>{{ log.details or '-' }}</td>
+                        <td>{{ log.ip_address or '-' }}</td>
+                    </tr>
+                    {% endfor %}
+                    {% if not logs %}
+                    <tr>
+                        <td colspan="5" class="text-center text-muted">No logs available.</td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

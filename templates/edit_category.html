@@ -21,6 +21,16 @@
                        min="0" max="100" step="0.01" required placeholder="e.g., 30" value="{{ category.percentage }}">
                 <div class="form-text">How much this category contributes to the final score (should total 100% across all categories)</div>
             </div>
+
+            <div class="mb-3">
+                <label for="round" class="form-label">Round</label>
+                <select class="form-select" id="round" name="round" required>
+                    <option value="round1" {% if category.round == 'round1' %}selected{% endif %}>Round 1 (All Contestants)</option>
+                    <option value="round2" {% if category.round == 'round2' %}selected{% endif %}>Round 2 (Top 5)</option>
+                    <option value="round3" {% if category.round == 'round3' %}selected{% endif %}>Round 3 (Top 3)</option>
+                </select>
+                <div class="form-text">Round 2 and Round 3 must be single categories with 100% weight.</div>
+            </div>
             
             <div class="d-flex gap-2">
                 <button type="submit" class="btn btn-warning">

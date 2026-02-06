@@ -89,97 +89,257 @@
 {% block content %}
 <h2 class="mb-4 text-center">{{ competition_title }} Results</h2>
 
-{% if not all_locked %}
-    <div class="alert alert-warning">
-        <strong>Note:</strong> Not all categories are locked yet. Results may change.
-    </div>
-{% else %}
-    <div class="alert alert-success">
-        <strong>Final Results:</strong> All categories are locked.
-    </div>
-{% endif %}
+{% if round1_locked or round2_locked or round3_locked %}
+    {% if divisions %}
+        {% set primary_divisions = ['female', 'male'] %}
 
-{% if results %}
-    <!-- Detailed Results Table -->
-    <h3 class="mb-3">Rankings and Scores</h3>
-    <div class="table-responsive">
-        <table class="table">
-            <thead class="table-dark">
-                <tr>
-                    <th>Rank</th>
-                    <th>Contestant #</th>
-                    <th>Name</th>
-                    {% for category in categories %}
-                    <th>{{ category.name }}<br><small>({{ category.percentage }}%)</small></th>
-                    {% endfor %}
-                    <th>Total Score</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for result in results %}
-                <tr>
-                    <td>
-                        <span class="rank-badge">
-                            {{ result.rank }}
-                        </span>
-                    </td>
-                    <td><strong>{{ result.contestant.number }}</strong></td>
-                    <td><strong>{{ result.contestant.name }}</strong></td>
-                    {% for category in categories %}
-                    <td>
-                        {% if result.category_scores[category.name] %}
-                            {{ "%.2f"|format(result.category_scores[category.name].weighted) }}
-                            <br>
-                            <small class="text-muted">({{ "%.2f"|format(result.category_scores[category.name].raw) }})</small>
-                        {% else %}
-                            -
-                        {% endif %}
-                    </td>
-                    {% endfor %}
-                    <td><strong style="color: #000000;">{{ "%.2f"|format(result.total_score) }}</strong></td>
-                </tr>
+        <div class="mt-4">
+            <h3 class="mb-3 text-center" style="color: #800000;">Round 1 Final Results</h3>
+
+            {% if round1_locked %}
+                {% for division in primary_divisions %}
+                    {% if division in divisions %}
+                        {% set division_label = division_labels.get(division, division|title) %}
+                        {% set round1_results = round1_results_by_division.get(division, []) %}
+                        <div class="mb-4">
+                            <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+                                <h4 class="mb-0">{{ division_label }} Results</h4>
+                                <a href="{{ url_for('download_results_pdf_round', round_name='round1', division=division) }}" class="btn btn-primary btn-sm" target="_blank">
+                                    <i class="bi bi-file-pdf"></i> Download PDF
+                                </a>
+                            </div>
+
+                            {% if round1_results %}
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th>Rank</th>
+                                            <th>Contestant #</th>
+                                            <th>Name</th>
+                                            {% for category in round1_categories %}
+                                            <th>{{ category.name }}<br><small>({{ category.percentage }}%)</small></th>
+                                            {% endfor %}
+                                            <th>Total Score</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for result in round1_results %}
+                                        <tr>
+                                            <td>
+                                                <span class="rank-badge">
+                                                    {{ result.rank }}
+                                                </span>
+                                            </td>
+                                            <td><strong>{{ result.contestant.number }}</strong></td>
+                                            <td><strong>{{ result.contestant.name }}</strong></td>
+                                            {% for category in round1_categories %}
+                                            <td>
+                                                {% if result.category_scores[category.name] %}
+                                                    {{ "%.4f"|format(result.category_scores[category.name].weighted) }}
+                                                    <br>
+                                                    <small class="text-muted">({{ "%.4f"|format(result.category_scores[category.name].raw) }})</small>
+                                                {% else %}
+                                                    -
+                                                {% endif %}
+                                            </td>
+                                            {% endfor %}
+                                            <td><strong style="color: #000000;">{{ "%.4f"|format(result.total_score) }}</strong></td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="alert alert-info mt-4">
+                                <h6>Score Breakdown:</h6>
+                                <ul class="mb-0">
+                                    <li><strong>Weighted Score:</strong> Main number (contributes to total based on category percentage)</li>
+                                    <li><strong>Raw Score:</strong> Number in parentheses (actual category score before percentage applied)</li>
+                                </ul>
+                            </div>
+
+                            {% if show_category_winners and category_winners_by_division.get(division) %}
+                            {% set division_winners = category_winners_by_division.get(division) %}
+                            <div class="mt-4">
+                                <h4 class="mb-3 text-center" style="color: #800000;">Category Winners - {{ division_label }}</h4>
+                                <div class="table-responsive">
+                                    <table class="table">
+                                        <thead class="table-dark">
+                                            <tr>
+                                                <th>Category</th>
+                                                <th>Winner</th>
+                                                <th>Contestant #</th>
+                                                <th>Category Score</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for category in round1_categories %}
+                                                {% if category.name in division_winners %}
+                                                <tr>
+                                                    <td><strong>{{ category.name }}</strong></td>
+                                                    <td>
+                                                        <strong>{{ division_winners[category.name].contestant.name }}</strong>
+                                                    </td>
+                                                    <td><strong>{{ division_winners[category.name].contestant.number }}</strong></td>
+                                                    <td><strong style="color: #000000;">{{ "%.4f"|format(division_winners[category.name].score) }}</strong></td>
+                                                </tr>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            {% endif %}
+                            {% else %}
+                            <div class="alert alert-info">
+                                Round 1 results are not available yet for {{ division_label }}.
+                            </div>
+                            {% endif %}
+                        </div>
+                    {% endif %}
                 {% endfor %}
-            </tbody>
-        </table>
-    </div>
-
-    <div class="alert alert-info mt-4">
-        <h6>Score Breakdown:</h6>
-        <ul class="mb-0">
-            <li><strong>Weighted Score:</strong> Main number (contributes to total based on category percentage)</li>
-            <li><strong>Raw Score:</strong> Number in parentheses (actual category score before percentage applied)</li>
-        </ul>
-    </div>
-
-    {% if show_category_winners and category_winners %}
-    <div class="mt-5">
-        <h3 class="mb-3 text-center" style="color: #800000;">Category Winners</h3>
-        <div class="table-responsive">
-            <table class="table">
-                <thead class="table-dark">
-                    <tr>
-                        <th>Category</th>
-                        <th>Winner</th>
-                        <th>Contestant #</th>
-                        <th>Category Score</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for category in categories %}
-                        {% if category.name in category_winners %}
-                        <tr>
-                            <td><strong>{{ category.name }}</strong></td>
-                            <td>
-                                <strong>{{ category_winners[category.name].contestant.name }}</strong>
-                            </td>
-                            <td><strong>{{ category_winners[category.name].contestant.number }}</strong></td>
-                            <td><strong style="color: #000000;">{{ "%.2f"|format(category_winners[category.name].score) }}</strong></td>
-                        </tr>
-                        {% endif %}
-                    {% endfor %}
-                </tbody>
-            </table>
+            {% else %}
+            <div class="alert alert-warning">
+                Round 1 results are hidden until all Round 1 categories are locked.
+            </div>
+            {% endif %}
         </div>
+
+        <div class="mt-5">
+            <h3 class="mb-3 text-center" style="color: #800000;">Round 2 Results</h3>
+            {% if round2_locked %}
+                {% for division in primary_divisions %}
+                    {% if division in divisions %}
+                        {% set division_label = division_labels.get(division, division|title) %}
+                        {% set round2_results = round2_results_by_division.get(division, []) %}
+                        <div class="mb-4">
+                            <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+                                <h4 class="mb-0">{{ division_label }} Results</h4>
+                                <a href="{{ url_for('download_results_pdf_round', round_name='round2', division=division) }}" class="btn btn-primary btn-sm" target="_blank">
+                                    <i class="bi bi-file-pdf"></i> Download PDF
+                                </a>
+                            </div>
+                            {% if round2_results %}
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th>Rank</th>
+                                            <th>Contestant #</th>
+                                            <th>Name</th>
+                                            {% for category in round2_categories %}
+                                            <th>{{ category.name }}<br><small>({{ category.percentage }}%)</small></th>
+                                            {% endfor %}
+                                            <th>Total Score</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for result in round2_results %}
+                                        <tr>
+                                            <td><strong>{{ result.rank }}</strong></td>
+                                            <td><strong>{{ result.contestant.number }}</strong></td>
+                                            <td><strong>{{ result.contestant.name }}</strong></td>
+                                            {% for category in round2_categories %}
+                                            <td>
+                                                {% if result.category_scores[category.name] %}
+                                                    {{ "%.4f"|format(result.category_scores[category.name].weighted) }}
+                                                    <br>
+                                                    <small class="text-muted">({{ "%.4f"|format(result.category_scores[category.name].raw) }})</small>
+                                                {% else %}
+                                                    -
+                                                {% endif %}
+                                            </td>
+                                            {% endfor %}
+                                            <td><strong style="color: #000000;">{{ "%.4f"|format(result.total_score) }}</strong></td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <div class="alert alert-info">
+                                Top 5 results are not available yet for {{ division_label }}.
+                            </div>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            {% else %}
+            <div class="alert alert-warning">
+                Top 5 results are hidden until all Round 2 categories are locked.
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="mt-5">
+            <h3 class="mb-3 text-center" style="color: #800000;">Round 3 Results</h3>
+            {% if round3_locked %}
+                {% for division in primary_divisions %}
+                    {% if division in divisions %}
+                        {% set division_label = division_labels.get(division, division|title) %}
+                        {% set round3_results = round3_results_by_division.get(division, []) %}
+                        <div class="mb-4">
+                            <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+                                <h4 class="mb-0">{{ division_label }} Results</h4>
+                                <a href="{{ url_for('download_results_pdf_round', round_name='round3', division=division) }}" class="btn btn-primary btn-sm" target="_blank">
+                                    <i class="bi bi-file-pdf"></i> Download PDF
+                                </a>
+                            </div>
+                            {% if round3_results %}
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th>Rank</th>
+                                            <th>Contestant #</th>
+                                            <th>Name</th>
+                                            {% for category in round3_categories %}
+                                            <th>{{ category.name }}<br><small>({{ category.percentage }}%)</small></th>
+                                            {% endfor %}
+                                            <th>Total Score</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for result in round3_results %}
+                                        <tr>
+                                            <td><strong>{{ result.rank }}</strong></td>
+                                            <td><strong>{{ result.contestant.number }}</strong></td>
+                                            <td><strong>{{ result.contestant.name }}</strong></td>
+                                            {% for category in round3_categories %}
+                                            <td>
+                                                {% if result.category_scores[category.name] %}
+                                                    {{ "%.4f"|format(result.category_scores[category.name].weighted) }}
+                                                    <br>
+                                                    <small class="text-muted">({{ "%.4f"|format(result.category_scores[category.name].raw) }})</small>
+                                                {% else %}
+                                                    -
+                                                {% endif %}
+                                            </td>
+                                            {% endfor %}
+                                            <td><strong style="color: #000000;">{{ "%.4f"|format(result.total_score) }}</strong></td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <div class="alert alert-info">
+                                Final results are not available yet for {{ division_label }}.
+                            </div>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            {% else %}
+            <div class="alert alert-warning">
+                Final results are hidden until all Round 3 categories are locked.
+            </div>
+            {% endif %}
+        </div>
+    {% else %}
+    <div class="alert alert-info">
+        No results available yet. Please add contestants, categories, and scores first.
     </div>
     {% endif %}
 {% else %}
@@ -189,11 +349,6 @@
 {% endif %}
 
 <div class="mt-4 text-center">
-    {% if results %}
-    <a href="{{ url_for('download_results_pdf') }}" class="btn btn-primary" target="_blank">
-        <i class="bi bi-file-pdf"></i> Download PDF Copy
-    </a>
-    {% endif %}
     <a href="{{ url_for('index') }}" class="btn btn-outline-primary">
         Back to Home
     </a>

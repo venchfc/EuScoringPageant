@@ -40,7 +40,7 @@
         </div>
 
         <div class="row g-4 mt-3">
-            <div class="col-md-6">
+            <div class="col-md-4">
                 <div class="card h-100 shadow-sm">
                     <div class="card-body text-center">
                         <h5 class="card-title">Results</h5>
@@ -49,8 +49,18 @@
                     </div>
                 </div>
             </div>
-            
-            <div class="col-md-6">
+
+            <div class="col-md-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Scoring</h5>
+                        <p class="card-text">Upload judges' scores and manage scoring</p>
+                        <a href="{{ url_for('scoring_menu') }}" class="btn btn-primary">Enter Scores</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
                 <div class="card h-100 shadow-sm">
                     <div class="card-body text-center">
                         <h5 class="card-title">Settings</h5>
@@ -86,38 +96,15 @@
             <p class="lead text-dark" style="font-size: 1.3rem;">Welcome to the Official Scoring System</p>
             <p class="text-muted" style="font-size: 1.1rem;">Manuel S. Enverga University Foundation - Catanauan Inc</p>
         </div>
-        
-        <!-- Main Action Cards -->
-        <div class="row g-4 mb-5 justify-content-center">
-            <div class="col-lg-5 col-md-6">
-                <div class="card h-100 shadow-lg border-0" style="background: linear-gradient(135deg, #800000 0%, #a00000 100%);">
-                    <div class="card-body card-body-transparent text-center text-white p-5">
-                        <i class="bi bi-trophy" style="font-size: 4rem; margin-bottom: 1.5rem; opacity: 0.9;"></i>
-                        <h3 class="card-title mb-3 fw-bold">View Live Results</h3>
-                        <p class="card-text mb-4" style="font-size: 1.05rem;">
-                            Check current standings, scores, and rankings from all competition categories
-                        </p>
-                        <a href="{{ url_for('results') }}" class="btn btn-light btn-lg px-5 py-3 fw-semibold">
-                            <i class="bi bi-eye"></i> View Results
-                        </a>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="col-lg-5 col-md-6">
-                <div class="card h-100 shadow-lg border-0" style="background: linear-gradient(135deg, #FF6600 0%, #FF8C00 100%);">
-                    <div class="card-body card-body-transparent text-center text-white p-5">
-                        <i class="bi bi-pen-fill" style="font-size: 4rem; margin-bottom: 1.5rem; opacity: 0.9;"></i>
-                        <h3 class="card-title mb-3 fw-bold">Upload Judges’ Scores</h3>
-                        <p class="card-text mb-4" style="font-size: 1.05rem;">
-                            Access the scoring interface to submit your evaluations and ratings
-                        </p>
-                        <a href="{{ url_for('scoring_menu') }}" class="btn btn-light btn-lg px-5 py-3 fw-semibold">
-                            <i class="bi bi-clipboard-check"></i> Enter Scores
-                        </a>
-                    </div>
-                </div>
-            </div>
+
+        <div class="mx-auto" style="max-width: 720px;">
+            <p class="text-muted" style="font-size: 1.05rem;">
+                This pageant scoring system is managed by authorized staff. Please use the Admin login to access
+                scoring tools, results, and settings.
+            </p>
+            <a href="{{ url_for('login') }}" class="btn btn-primary">
+                <i class="bi bi-box-arrow-in-right"></i> Admin Login
+            </a>
         </div>
         
         <!-- Developer Credit -->

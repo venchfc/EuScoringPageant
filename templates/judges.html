@@ -11,36 +11,44 @@
 </div>
 
 {% if judges %}
-    <div class="row">
-        {% for judge in judges %}
-        <div class="col-md-4 mb-3">
-            <div class="card h-100 shadow-sm">
-                <div class="card-body text-center">
-                    <div class="display-4 mb-2" style="color: #800000;">{{ judge.number }}</div>
-                    <h5 class="card-title">{{ judge.name }}</h5>
-                    <small class="text-muted">
-                        Added: {{ judge.created_at.strftime('%Y-%m-%d') }}
-                    </small>
-                    <div class="mt-3">
-                        <a href="{{ url_for('edit_judge', judge_id=judge.id) }}" class="btn btn-sm btn-warning">
-                            <i class="bi bi-pencil"></i> Edit
-                        </a>
-                        <button onclick="deleteJudge({{ judge.id }}, {{ judge.number }}, '{{ judge.name }}')" class="btn btn-sm btn-primary">
-                            <i class="bi bi-trash"></i> Delete
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-        {% endfor %}
+    <div class="table-responsive">
+        <table class="table">
+            <thead class="table-dark">
+                <tr>
+                    <th style="width: 110px;">Judge #</th>
+                    <th>Name</th>
+                    <th style="width: 160px;">Added</th>
+                    <th style="width: 160px;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for judge in judges %}
+                <tr>
+                    <td><strong>{{ judge.number }}</strong></td>
+                    <td><strong>{{ judge.name }}</strong></td>
+                    <td><span class="text-muted">{{ judge.created_at.strftime('%Y-%m-%d') }}</span></td>
+                    <td>
+                        <div class="d-flex gap-2 flex-wrap">
+                            <a href="{{ url_for('edit_judge', judge_id=judge.id) }}" class="btn btn-sm btn-warning" style="min-width: 72px;">
+                                Edit
+                            </a>
+                            <button onclick="deleteJudge({{ judge.id }}, {{ judge.number }}, '{{ judge.name }}')" class="btn btn-sm btn-primary" style="min-width: 72px;">
+                                Delete
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
     
     <div class="alert alert-info mt-4">
-        <i class="bi bi-info-circle"></i> Total Judges: <strong>{{ judges|length }}</strong>
+        Total Judges: <strong>{{ judges|length }}</strong>
     </div>
 {% else %}
     <div class="alert alert-warning">
-        <i class="bi bi-exclamation-triangle"></i> No judges added yet. 
+        No judges added yet. 
         <a href="{{ url_for('add_judge') }}" class="alert-link">Add your first judge</a> to get started.
     </div>
 {% endif %}

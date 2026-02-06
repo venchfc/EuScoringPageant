@@ -10,33 +10,56 @@
     </a>
 </div>
 
-{% if contestants %}
-    <div class="row">
-        {% for contestant in contestants %}
-        <div class="col-md-4 mb-3">
-            <div class="card h-100 shadow-sm">
-                <div class="card-body text-center">
-                    <div class="display-4 mb-2" style="color: #800000;">{{ contestant.number }}</div>
-                    <h5 class="card-title">{{ contestant.name }}</h5>
-                    <small class="text-muted">
-                        Added: {{ contestant.created_at.strftime('%Y-%m-%d') }}
-                    </small>
-                    <div class="mt-3">
-                        <a href="{{ url_for('edit_contestant', contestant_id=contestant.id) }}" class="btn btn-sm btn-warning">
-                            Edit
-                        </a>
-                        <button onclick="deleteContestant({{ contestant.id }}, {{ contestant.number }}, '{{ contestant.name }}')" class="btn btn-sm btn-primary">
-                            Delete
-                        </button>
-                    </div>
-                </div>
-            </div>
+{% if divisions %}
+    {% for division in divisions %}
+        {% set division_label = division_labels.get(division, division|title) %}
+        {% set division_contestants = contestants_by_division.get(division, []) %}
+        <div class="d-flex justify-content-between align-items-center mt-4 mb-2">
+            <h4 class="mb-0" style="color: #800000;">{{ division_label }} Division</h4>
+            <span class="badge bg-secondary">{{ division_contestants|length }}</span>
         </div>
-        {% endfor %}
-    </div>
-    
+
+        {% if division_contestants %}
+        <div class="table-responsive">
+            <table class="table">
+                <thead class="table-dark">
+                    <tr>
+                        <th style="width: 110px;">Contestant #</th>
+                        <th>Name</th>
+                        <th style="width: 160px;">Added</th>
+                        <th style="width: 160px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for contestant in division_contestants %}
+                    <tr>
+                        <td><strong>{{ contestant.number }}</strong></td>
+                        <td><strong>{{ contestant.name }}</strong></td>
+                        <td><span class="text-muted">{{ contestant.created_at.strftime('%Y-%m-%d') }}</span></td>
+                        <td>
+                            <div class="d-flex gap-2 flex-wrap">
+                                <a href="{{ url_for('edit_contestant', contestant_id=contestant.id) }}" class="btn btn-sm btn-warning" style="min-width: 72px;">
+                                    Edit
+                                </a>
+                                <button onclick="deleteContestant({{ contestant.id }}, {{ contestant.number }}, '{{ contestant.name }}')" class="btn btn-sm btn-primary" style="min-width: 72px;">
+                                    Delete
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="alert alert-info">
+            No contestants added yet for {{ division_label }} division.
+        </div>
+        {% endif %}
+    {% endfor %}
+
     <div class="alert alert-info mt-4">
-        Total Contestants: <strong>{{ contestants|length }}</strong>
+        Total Contestants: <strong>{{ total_contestants }}</strong>
     </div>
 {% else %}
     <div class="alert alert-warning">
