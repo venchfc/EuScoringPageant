@@ -5,7 +5,9 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2>Admin Users</h2>
-    <a href="{{ url_for('admin_settings') }}" class="btn btn-outline-primary">Back to Settings</a>
+    <a href="{{ url_for('admin_settings') }}" class="btn btn-outline-primary">
+        <i class="fa-solid fa-arrow-left me-2"></i>Back to Settings
+    </a>
 </div>
 
 <div class="card mb-4">
@@ -14,17 +16,33 @@
     </div>
     <div class="card-body">
         <form method="POST" action="{{ url_for('admin_users_create') }}" class="row g-3">
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <label for="newUsername" class="form-label">Username</label>
                 <input type="text" class="form-control" id="newUsername" name="username" required>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <label for="newPassword" class="form-label">Password</label>
                 <input type="password" class="form-control" id="newPassword" name="password" required>
             </div>
-            <div class="col-md-4 d-flex align-items-end">
+            <div class="col-md-2">
+                <label for="newRole" class="form-label">Role</label>
+                <select class="form-select" id="newRole" name="role" required>
+                    <option value="admin">Admin</option>
+                    <option value="tabulator">Tabulator</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="newPortal" class="form-label">Portal</label>
+                <select class="form-select" id="newPortal" name="portal_id" disabled>
+                    <option value="">-- Select --</option>
+                    {% for portal in portals %}
+                    <option value="{{ portal.id }}">{{ portal.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
                 <button type="submit" class="btn btn-primary">
-                    <i class="bi bi-person-plus"></i> Create User
+                    <i class="fa-solid fa-user-plus me-2"></i>Create User
                 </button>
             </div>
         </form>
@@ -41,6 +59,7 @@
                 <thead class="table-dark">
                     <tr>
                         <th>Username</th>
+                        <th>Role / Portal</th>
                         <th>Status</th>
                         <th>Created</th>
                         <th>Reset Password</th>
@@ -49,8 +68,20 @@
                 </thead>
                 <tbody>
                     {% for user in users %}
+                    {% set is_main = (user.username == default_admin_username) %}
+                    {% set is_self = (current_user and current_user.id == user.id) %}
                     <tr>
                         <td><strong>{{ user.username }}</strong></td>
+                        <td>
+                            {% if user.role == 'admin' %}
+                                <span class="badge bg-primary">Admin</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Tabulator</span>
+                            {% endif %}
+                            {% if user.portal %}
+                                <span class="badge bg-info">{{ user.portal.name }}</span>
+                            {% endif %}
+                        </td>
                         <td>
                             {% if user.is_active %}
                                 <span class="unlocked-badge">Active</span>
@@ -62,17 +93,40 @@
                         <td>
                             <form method="POST" action="{{ url_for('admin_users_reset', user_id=user.id) }}" class="d-flex gap-2">
                                 <input type="password" class="form-control form-control-sm" name="new_password" placeholder="New password" required>
-                                <button type="submit" class="btn btn-primary btn-sm">Reset</button>
+                                <button type="submit" class="btn btn-primary btn-sm">
+                                    <i class="fa-solid fa-key me-2"></i>Reset
+                                </button>
                             </form>
                         </td>
                         <td>
-                            <form method="POST" action="{{ url_for('admin_users_toggle', user_id=user.id) }}">
-                                {% if user.is_active %}
-                                    <button type="submit" class="btn btn-outline-secondary btn-sm">Disable</button>
+                            <div class="d-flex gap-2 flex-wrap">
+                                <form method="POST" action="{{ url_for('admin_users_toggle', user_id=user.id) }}">
+                                    {% if user.is_active %}
+                                        <button type="submit" class="btn btn-outline-secondary btn-sm">
+                                            <i class="fa-solid fa-ban me-2"></i>Disable
+                                        </button>
+                                    {% else %}
+                                        <button type="submit" class="btn btn-outline-primary btn-sm">
+                                            <i class="fa-solid fa-check me-2"></i>Enable
+                                        </button>
+                                    {% endif %}
+                                </form>
+                                {% if is_main %}
+                                    <button class="btn btn-outline-secondary btn-sm" disabled>
+                                        <i class="fa-solid fa-shield-halved me-2"></i>Main
+                                    </button>
+                                {% elif is_self %}
+                                    <button class="btn btn-outline-secondary btn-sm" disabled>
+                                        <i class="fa-solid fa-user-shield me-2"></i>Current
+                                    </button>
                                 {% else %}
-                                    <button type="submit" class="btn btn-outline-primary btn-sm">Enable</button>
+                                    <form method="POST" action="{{ url_for('admin_users_delete', user_id=user.id) }}" onsubmit="return confirm('Delete this account? This action cannot be undone.');">
+                                        <button type="submit" class="btn btn-outline-danger btn-sm">
+                                            <i class="fa-solid fa-trash me-2"></i>Delete
+                                        </button>
+                                    </form>
                                 {% endif %}
-                            </form>
+                            </div>
                         </td>
                     </tr>
                     {% endfor %}
@@ -81,4 +135,20 @@
         </div>
     </div>
 </div>
+
+<script>
+const roleSelect = document.getElementById('newRole');
+const portalSelect = document.getElementById('newPortal');
+
+function syncPortalSelect() {
+    const isTabulator = roleSelect.value === 'tabulator';
+    portalSelect.disabled = !isTabulator;
+    if (!isTabulator) {
+        portalSelect.value = '';
+    }
+}
+
+roleSelect.addEventListener('change', syncPortalSelect);
+syncPortalSelect();
+</script>
 {% endblock %}

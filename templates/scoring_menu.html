@@ -66,17 +66,24 @@
                         {% if not category.is_locked %}
                             {% if category.ready %}
                                 <a href="{{ url_for('scoring', category_id=category.id) }}" class="btn btn-success">
-                                    <i class="bi bi-pencil-square"></i> Start Scoring
+                                    <i class="fa-solid fa-pen-to-square me-2"></i>
+                                    {% if session.get('role') == 'admin' %}View Scores{% else %}Start Scoring{% endif %}
                                 </a>
                             {% else %}
                                 <button class="btn btn-secondary" disabled>
-                                    <i class="bi bi-x-circle"></i> Not Ready
+                                    <i class="fa-solid fa-ban me-2"></i>Not Ready
                                 </button>
                             {% endif %}
                         {% else %}
-                            <button class="btn btn-secondary" disabled>
-                                <i class="bi bi-check-circle"></i> Scoring Complete
-                            </button>
+                            {% if session.get('role') == 'admin' %}
+                                <a href="{{ url_for('scoring', category_id=category.id) }}" class="btn btn-secondary">
+                                    <i class="fa-solid fa-eye me-2"></i>View Scores
+                                </a>
+                            {% else %}
+                                <button class="btn btn-secondary" disabled>
+                                    <i class="fa-solid fa-check-circle me-2"></i>Scoring Complete
+                                </button>
+                            {% endif %}
                         {% endif %}
                     </div>
 

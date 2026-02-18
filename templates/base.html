@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Pageant Scoring System{% endblock %}</title>
+    <title>{% block title %}MSEUF Catanauan Tabulation System{% endblock %}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" referrerpolicy="no-referrer">
     <style>
         :root {
             --primary-color: #800000;
@@ -52,12 +53,27 @@
             padding: 12px 0;
             border-bottom: 3px solid var(--primary-dark);
         }
+
+        .navbar-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
         
         .navbar-brand {
             font-weight: 600;
             font-size: 1.25rem;
             color: #ffffff !important;
             letter-spacing: -0.5px;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .brand-logo {
+            height: 32px;
+            width: auto;
+            filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.85));
         }
         
         .nav-link {
@@ -440,6 +456,26 @@
             border-radius: 4px;
             overflow: hidden;
         }
+
+        .action-buttons {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .action-icon-btn {
+            width: 34px;
+            height: 34px;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+        }
+
+        .action-icon-btn i {
+            margin: 0;
+        }
         
         @media (max-width: 768px) {
             .main-container {
@@ -449,6 +485,10 @@
             
             .navbar-brand {
                 font-size: 1rem;
+            }
+
+            .brand-logo {
+                height: 26px;
             }
             
             h2 {
@@ -460,19 +500,22 @@
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
-        <div class="container-fluid">
+        <div class="container-fluid navbar-inner">
             <a class="navbar-brand" href="{{ url_for('index') }}">
-                MSEUF Catanauan {{ competition_title }}
+                <img src="{{ url_for('static', filename='images/MseufCatLogo.png') }}" alt="MSEUF Catanauan Logo" class="brand-logo">
+                MSEUF Catanauan Tabulation System
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
+                    {% if not (session.get('logged_in') and session.get('role') == 'tabulator') %}
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('index') }}"><i class="bi bi-house-door"></i> Home</a>
                     </li>
-                    {% if session.get('logged_in') %}
+                    {% endif %}
+                    {% if session.get('logged_in') and session.get('role') == 'admin' %}
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('categories') }}"><i class="bi bi-grid-3x3-gap"></i> Categories</a>
                     </li>
@@ -483,23 +526,29 @@
                         <a class="nav-link" href="{{ url_for('judges') }}"><i class="bi bi-person-badge"></i> Judges</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('scoring_menu') }}"><i class="bi bi-pen"></i> Scoring</a>
+                        <a class="nav-link" href="{{ url_for('scoring_menu') }}"><i class="bi bi-pen"></i> Scores</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('results') }}"><i class="bi bi-trophy"></i> Results</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('admin_settings') }}"><i class="bi bi-gear"></i> Settings</a>
                     </li>
-                    {% else %}
-                    {% endif %}
+                    {% elif session.get('logged_in') and session.get('role') == 'tabulator' %}
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('results') }}"><i class="bi bi-trophy"></i> Results</a>
+                        <a class="nav-link" href="{{ url_for('tabulator_dashboard') }}"><i class="bi bi-house-door"></i> Home</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('scoring_menu') }}"><i class="bi bi-pen"></i> Scoring</a>
+                    </li>
+                    {% endif %}
                     {% if session.get('logged_in') %}
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('logout') }}"><i class="bi bi-box-arrow-right"></i> Logout</a>
                     </li>
                     {% else %}
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('login') }}"><i class="bi bi-box-arrow-in-right"></i> Admin</a>
+                        <a class="nav-link" href="{{ url_for('login') }}"><i class="bi bi-box-arrow-in-right"></i> Login</a>
                     </li>
                     {% endif %}
                 </ul>
@@ -510,12 +559,16 @@
     <div class="container">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show mt-3" role="alert">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                {% endfor %}
+                <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1080;">
+                    {% for category, message in messages %}
+                        <div class="toast align-items-center text-bg-{{ 'danger' if category == 'error' else category }} border-0 mb-2" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="6000">
+                            <div class="d-flex">
+                                <div class="toast-body">{{ message }}</div>
+                                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
             {% endif %}
         {% endwith %}
 
@@ -525,6 +578,12 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.querySelectorAll('.toast').forEach((toastEl) => {
+            const toast = new bootstrap.Toast(toastEl);
+            toast.show();
+        });
+    </script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>

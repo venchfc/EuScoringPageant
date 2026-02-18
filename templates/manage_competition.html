@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Competition - Pageant Scoring{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Manage Competition Portals</h2>
+    <a href="{{ url_for('admin_settings') }}" class="btn btn-outline-primary">
+        <i class="fa-solid fa-arrow-left me-2"></i>Back to Settings
+    </a>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0"><i class="bi bi-plus-circle"></i> Add Competition Portal</h5>
+    </div>
+    <div class="card-body">
+        <form method="POST" class="row g-3">
+            <div class="col-md-8">
+                <label for="portalName" class="form-label">Competition Name</label>
+                <input type="text" class="form-control" id="portalName" name="name" required placeholder="e.g., Mr & Ms BSBA">
+            </div>
+            <div class="col-md-4 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fa-solid fa-plus me-2"></i>Create Portal
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0"><i class="bi bi-flag"></i> Close Event</h5>
+    </div>
+    <div class="card-body">
+        <p class="text-muted mb-2">
+            Current Event Title: <strong>{{ event_title or 'Not set' }}</strong>
+        </p>
+        <div class="alert alert-warning">
+            Closing the event will archive all portals, categories, judges, contestants, and scores into History.
+            Active portals will be cleared so you can start a new event.
+        </div>
+        <form method="POST" action="{{ url_for('close_event') }}" onsubmit="return confirm('Close this event and archive all data? This will clear active portals.');">
+            <button type="submit" class="btn btn-primary">
+                <i class="fa-solid fa-box-archive me-2"></i>Close Event & Archive
+            </button>
+            <a href="{{ url_for('competition_settings') }}" class="btn btn-outline-secondary ms-2">
+                <i class="fa-solid fa-pen-to-square me-2"></i>Set Event Title
+            </a>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0"><i class="bi bi-grid"></i> Existing Portals</h5>
+    </div>
+    <div class="card-body">
+        {% if portals %}
+        <div class="table-responsive">
+            <table class="table">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Name</th>
+                        <th>Status</th>
+                        <th>Created</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for portal in portals %}
+                    <tr>
+                        <td><strong>{{ portal.name }}</strong></td>
+                        <td>
+                            {% if portal.is_active %}
+                                <span class="unlocked-badge">Active</span>
+                            {% else %}
+                                <span class="locked-badge">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ portal.created_at.strftime('%Y-%m-%d') }}</td>
+                        <td>
+                            <form method="POST" action="{{ url_for('toggle_competition_portal', portal_id=portal.id) }}">
+                                {% if portal.is_active %}
+                                    <button type="submit" class="btn btn-outline-secondary btn-sm">
+                                        <i class="fa-solid fa-toggle-off me-2"></i>Deactivate
+                                    </button>
+                                {% else %}
+                                    <button type="submit" class="btn btn-outline-primary btn-sm">
+                                        <i class="fa-solid fa-toggle-on me-2"></i>Activate
+                                    </button>
+                                {% endif %}
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="alert alert-info">No competition portals created yet.</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

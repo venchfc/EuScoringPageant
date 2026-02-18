@@ -87,9 +87,94 @@
 {% endblock %}
 
 {% block content %}
-<h2 class="mb-4 text-center">{{ competition_title }} Results</h2>
+<h2 class="mb-4 text-center">
+    {% if history_mode and history_event_title %}
+        {{ history_event_title }} Results
+    {% else %}
+        {{ competition_title }} Results
+    {% endif %}
+</h2>
+{% if history_mode and history_portal_name %}
+    <p class="text-center text-muted">Portal: {{ history_portal_name }}</p>
+{% endif %}
 
-{% if round1_locked or round2_locked or round3_locked %}
+{% if not history_mode %}
+    {% if nav_portals %}
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="bi bi-filter"></i> Filter by Competition Portal</h5>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                {% for portal in nav_portals %}
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="mb-1">{{ portal.name }}</h6>
+                                    {% if portal.is_active %}
+                                        <span class="unlocked-badge">Active</span>
+                                    {% else %}
+                                        <span class="locked-badge">Inactive</span>
+                                    {% endif %}
+                                </div>
+                                {% if active_portal_id == portal.id %}
+                                    <span class="badge bg-success">Selected</span>
+                                {% endif %}
+                            </div>
+                            <div class="mt-3">
+                                <a href="{{ url_for('results', portal_id=portal.id) }}" class="btn btn-outline-primary btn-sm" {% if not portal.is_active %}aria-disabled="true"{% endif %}>
+                                    <i class="fa-solid fa-chart-column me-2"></i>View Results
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="d-flex flex-wrap justify-content-end gap-2 mb-3">
+        {% if active_portal_id %}
+            <a href="{{ url_for('download_results_pdf', portal_id=active_portal_id) }}" class="btn btn-primary btn-sm" target="_blank">
+                <i class="fa-solid fa-file-pdf me-2"></i>Download Final Results PDF
+            </a>
+            {% if divisions %}
+                {% if 'male' in divisions %}
+                    <a href="{{ url_for('download_results_pdf', portal_id=active_portal_id, division='male') }}" class="btn btn-outline-primary btn-sm" target="_blank">
+                        <i class="fa-solid fa-file-pdf me-2"></i>Male Final Results PDF
+                    </a>
+                {% endif %}
+                {% if 'female' in divisions %}
+                    <a href="{{ url_for('download_results_pdf', portal_id=active_portal_id, division='female') }}" class="btn btn-outline-primary btn-sm" target="_blank">
+                        <i class="fa-solid fa-file-pdf me-2"></i>Female Final Results PDF
+                    </a>
+                {% endif %}
+            {% endif %}
+        {% else %}
+            <a href="{{ url_for('download_results_pdf') }}" class="btn btn-primary btn-sm" target="_blank">
+                <i class="fa-solid fa-file-pdf me-2"></i>Download Final Results PDF
+            </a>
+            {% if divisions %}
+                {% if 'male' in divisions %}
+                    <a href="{{ url_for('download_results_pdf', division='male') }}" class="btn btn-outline-primary btn-sm" target="_blank">
+                        <i class="fa-solid fa-file-pdf me-2"></i>Male Final Results PDF
+                    </a>
+                {% endif %}
+                {% if 'female' in divisions %}
+                    <a href="{{ url_for('download_results_pdf', division='female') }}" class="btn btn-outline-primary btn-sm" target="_blank">
+                        <i class="fa-solid fa-file-pdf me-2"></i>Female Final Results PDF
+                    </a>
+                {% endif %}
+            {% endif %}
+        {% endif %}
+    </div>
+{% endif %}
+
+{% if has_live_results %}
     {% if divisions %}
         {% set primary_divisions = ['female', 'male'] %}
 
@@ -104,9 +189,6 @@
                         <div class="mb-4">
                             <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
                                 <h4 class="mb-0">{{ division_label }} Results</h4>
-                                <a href="{{ url_for('download_results_pdf_round', round_name='round1', division=division) }}" class="btn btn-primary btn-sm" target="_blank">
-                                    <i class="bi bi-file-pdf"></i> Download PDF
-                                </a>
                             </div>
 
                             {% if round1_results %}
@@ -179,9 +261,10 @@
                                                 <tr>
                                                     <td><strong>{{ category.name }}</strong></td>
                                                     <td>
-                                                        <strong>{{ division_winners[category.name].contestant.name }}</strong>
+                                                            {% set winners = division_winners[category.name].contestants %}
+                                                            <strong>{{ winners|map(attribute='name')|join(' / ') }}</strong>
                                                     </td>
-                                                    <td><strong>{{ division_winners[category.name].contestant.number }}</strong></td>
+                                                        <td><strong>{{ winners|map(attribute='number')|join(' / ') }}</strong></td>
                                                     <td><strong style="color: #000000;">{{ "%.4f"|format(division_winners[category.name].score) }}</strong></td>
                                                 </tr>
                                                 {% endif %}
@@ -201,7 +284,7 @@
                 {% endfor %}
             {% else %}
             <div class="alert alert-warning">
-                Round 1 results are hidden until all Round 1 categories are locked.
+                Round 1 results will appear once at least one Round 1 category is locked.
             </div>
             {% endif %}
         </div>
@@ -216,9 +299,6 @@
                         <div class="mb-4">
                             <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
                                 <h4 class="mb-0">{{ division_label }} Results</h4>
-                                <a href="{{ url_for('download_results_pdf_round', round_name='round2', division=division) }}" class="btn btn-primary btn-sm" target="_blank">
-                                    <i class="bi bi-file-pdf"></i> Download PDF
-                                </a>
                             </div>
                             {% if round2_results %}
                             <div class="table-responsive">
@@ -267,7 +347,7 @@
                 {% endfor %}
             {% else %}
             <div class="alert alert-warning">
-                Top 5 results are hidden until all Round 2 categories are locked.
+                Round 2 results will appear once at least one Round 2 category is locked.
             </div>
             {% endif %}
         </div>
@@ -282,9 +362,6 @@
                         <div class="mb-4">
                             <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
                                 <h4 class="mb-0">{{ division_label }} Results</h4>
-                                <a href="{{ url_for('download_results_pdf_round', round_name='round3', division=division) }}" class="btn btn-primary btn-sm" target="_blank">
-                                    <i class="bi bi-file-pdf"></i> Download PDF
-                                </a>
                             </div>
                             {% if round3_results %}
                             <div class="table-responsive">
@@ -333,7 +410,7 @@
                 {% endfor %}
             {% else %}
             <div class="alert alert-warning">
-                Final results are hidden until all Round 3 categories are locked.
+                Round 3 results will appear once at least one Round 3 category is locked.
             </div>
             {% endif %}
         </div>
@@ -344,16 +421,62 @@
     {% endif %}
 {% else %}
     <div class="alert alert-info">
-        No results available yet. Please add contestants, categories, and scores first.
+        No locked categories yet. Lock at least one category to see live results.
     </div>
 {% endif %}
 
+{% if judge_breakdown and judges %}
+<div class="mt-5">
+    <h3 class="mb-3 text-center" style="color: #800000;">Judges Breakdown</h3>
+    {% for category in categories %}
+        {% set breakdown_rows = judge_breakdown.get(category.id) %}
+        {% set breakdown_contestants = judge_breakdown_contestants.get(category.id, []) %}
+        {% if breakdown_rows and breakdown_contestants %}
+            <div class="mb-4">
+                <h5 class="mb-2">{{ category.name }} ({{ category.round|title }})</h5>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Contestant #</th>
+                                <th>Name</th>
+                                {% for judge in judges %}
+                                    <th>Judge {{ judge.number }}</th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for contestant in breakdown_contestants %}
+                            <tr>
+                                <td><strong>{{ contestant.number }}</strong></td>
+                                <td><strong>{{ contestant.name }}</strong></td>
+                                {% for judge in judges %}
+                                    {% set score_value = breakdown_rows.get(contestant.id, {}).get(judge.id, 0) %}
+                                    <td>{{ "%.4f"|format(score_value) }}</td>
+                                {% endfor %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        {% endif %}
+    {% endfor %}
+</div>
+{% endif %}
+
 <div class="mt-4 text-center">
-    <a href="{{ url_for('index') }}" class="btn btn-outline-primary">
-        Back to Home
-    </a>
-    <a href="{{ url_for('categories') }}" class="btn btn-outline-secondary">
-        Manage Categories
-    </a>
+    {% if history_mode %}
+        <a href="{{ url_for('admin_history') }}" class="btn btn-outline-primary">
+            <i class="fa-solid fa-arrow-left me-2"></i>Back to History
+        </a>
+    {% else %}
+        <a href="{{ url_for('index') }}" class="btn btn-outline-primary">
+            <i class="fa-solid fa-arrow-left me-2"></i>Back to Home
+        </a>
+        <a href="{{ url_for('categories') }}" class="btn btn-outline-secondary">
+            <i class="fa-solid fa-list-check me-2"></i>Manage Categories
+        </a>
+    {% endif %}
 </div>
 {% endblock %}

@@ -14,39 +14,26 @@
                 <h5 class="card-title mb-3">General Settings</h5>
                 <form method="POST">
                     <div class="mb-3">
-                        <label for="competition_title" class="form-label">
-                            <strong>Competition Title</strong>
+                        <label for="event_title" class="form-label">
+                            <strong>Event Title</strong>
                         </label>
-                        <input type="text" 
-                               class="form-control form-control-lg" 
-                               id="competition_title" 
-                               name="competition_title" 
-                               value="{{ settings.competition_title }}" 
-                               required
-                               placeholder="e.g., Pageant Competition, Dance Competition, Singing Contest">
+                        <input type="text"
+                               class="form-control form-control-lg"
+                               id="event_title"
+                               name="event_title"
+                               value="{{ settings.event_title }}"
+                               placeholder="e.g., LITMUS 2026">
                         <div class="form-text">
-                            This title will appear on the public homepage, results page, and PDF reports.
+                            Used for event history cards when you close an event.
                         </div>
-                    </div>
-
-                    <div class="alert alert-info">
-                        <i class="bi bi-info-circle-fill me-2"></i>
-                        <strong>Examples:</strong>
-                        <ul class="mb-0 mt-2">
-                            <li>Pageant Competition</li>
-                            <li>Dance Competition</li>
-                            <li>Singing Contest</li>
-                            <li>Talent Show</li>
-                            <li>Search for Mr. & Ms. MSEUF 2026</li>
-                        </ul>
                     </div>
 
                     <div class="d-flex gap-2">
                         <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-check-circle"></i> Save Changes
+                            <i class="fa-solid fa-check-circle me-2"></i>Save Changes
                         </button>
                         <a href="{{ url_for('admin_settings') }}" class="btn btn-secondary">
-                            <i class="bi bi-x-circle"></i> Cancel
+                            <i class="fa-solid fa-xmark me-2"></i>Cancel
                         </a>
                     </div>
                 </form>

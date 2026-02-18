@@ -4,7 +4,7 @@
 
 {% block content %}
 <div class="mb-4">
-    <h2><i class="bi bi-gear"></i> Admin Settings</h2>
+    <h2><i class="fa-solid fa-gear me-2"></i>Admin Settings</h2>
     <p class="text-muted">Manage system settings and perform administrative tasks</p>
 </div>
 
@@ -12,7 +12,7 @@
     <div class="col-md-8">
         <div class="card mb-4">
             <div class="card-header bg-primary text-white">
-                <h5 class="mb-0"><i class="bi bi-pencil-square"></i> Competition Settings</h5>
+                <h5 class="mb-0"><i class="fa-solid fa-pen-to-square me-2"></i>Competition Settings</h5>
             </div>
             <div class="card-body">
                 <h6 class="card-title">Edit Competition Details</h6>
@@ -20,14 +20,44 @@
                     Customize the competition title that appears on the public homepage, results page, and PDF reports. This allows you to use the system for different types of competitions.
                 </p>
                 <a href="{{ url_for('competition_settings') }}" class="btn btn-primary">
-                    <i class="bi bi-gear-fill"></i> Manage Competition Settings
+                    <i class="fa-solid fa-sliders me-2"></i>Manage Competition Settings
                 </a>
             </div>
         </div>
 
         <div class="card mb-4">
             <div class="card-header bg-primary text-white">
-                <h5 class="mb-0"><i class="bi bi-person-gear"></i> Admin Users</h5>
+                <h5 class="mb-0"><i class="fa-solid fa-window-restore me-2"></i>Competition Portals</h5>
+            </div>
+            <div class="card-body">
+                <h6 class="card-title">Manage Competition</h6>
+                <p class="card-text text-muted">
+                    Create competition portals and assign tabulator accounts.
+                </p>
+                <a href="{{ url_for('manage_competition') }}" class="btn btn-primary">
+                    <i class="fa-solid fa-layer-group me-2"></i>Manage Competition
+                </a>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fa-solid fa-clock-rotate-left me-2"></i>History</h5>
+            </div>
+            <div class="card-body">
+                <h6 class="card-title">Event History</h6>
+                <p class="card-text text-muted">
+                    Create history cards for completed competitions and view results.
+                </p>
+                <a href="{{ url_for('admin_history') }}" class="btn btn-primary">
+                    <i class="fa-solid fa-card-clipboard me-2"></i>View History
+                </a>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fa-solid fa-user-gear me-2"></i>Admin Users</h5>
             </div>
             <div class="card-body">
                 <h6 class="card-title">Manage Admin Accounts</h6>
@@ -35,14 +65,14 @@
                     Create new admin users, reset passwords, or disable access for former staff.
                 </p>
                 <a href="{{ url_for('admin_users') }}" class="btn btn-primary">
-                    <i class="bi bi-people"></i> Manage Admin Users
+                    <i class="fa-solid fa-users me-2"></i>Manage Admin Users
                 </a>
             </div>
         </div>
         
         <div class="card mb-4">
             <div class="card-header bg-primary text-white">
-                <h5 class="mb-0"><i class="bi bi-trophy"></i> Results Display Settings</h5>
+                <h5 class="mb-0"><i class="fa-solid fa-trophy me-2"></i>Results Display Settings</h5>
             </div>
             <div class="card-body">
                 <h6 class="card-title">Category Winners Display</h6>
@@ -65,7 +95,7 @@
         
         <div class="card">
             <div class="card-header bg-primary text-white">
-                <h5 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Reset</h5>
+                <h5 class="mb-0"><i class="fa-solid fa-triangle-exclamation me-2"></i>Reset</h5>
             </div>
             <div class="card-body">
                 <h6 class="card-title">Reset Database</h6>
@@ -77,13 +107,20 @@
                     <li>All contestants</li>
                     <li>All judges</li>
                     <li>All scores</li>
+                    <li>Optional: Admin History (archived events)</li>
                 </ul>
                 <div class="alert alert-warning">
-                    <i class="bi bi-exclamation-triangle-fill"></i> <strong>Warning:</strong>  This feature is available in all environments. Use when you need to completely clear all data and start fresh.
+                    <i class="fa-solid fa-triangle-exclamation me-2"></i><strong>Warning:</strong>  This feature is available in all environments. Use when you need to completely clear all data and start fresh.
                 </div>
-                <form method="POST" action="{{ url_for('reset_database') }}" onsubmit="return confirm('⚠️ FINAL WARNING ⚠️\n\nThis will DELETE ALL DATA from the database!\n\n• All categories and criteria will be removed\n• All contestants will be removed\n• All judges will be removed\n• All scores will be removed\n\nThis action is PERMANENT and CANNOT be undone!\n\nType YES in your mind and click OK only if you are absolutely certain.');">
+                <form method="POST" action="{{ url_for('reset_database') }}" onsubmit="return confirm('⚠️ FINAL WARNING ⚠️\n\nThis will DELETE ALL DATA from the database!\n\n• All categories and criteria will be removed\n• All contestants will be removed\n• All judges will be removed\n• All scores will be removed\n\nIf you checked the Reset Admin History box, all archived events will be deleted too.\n\nThis action is PERMANENT and CANNOT be undone!\n\nType YES in your mind and click OK only if you are absolutely certain.');">
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="resetHistory" name="reset_history">
+                        <label class="form-check-label" for="resetHistory">
+                            Reset Admin History (archived events)
+                        </label>
+                    </div>
                     <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-trash"></i> Reset Database
+                        <i class="fa-solid fa-trash me-2"></i>Reset Database
                     </button>
                 </form>
             </div>
@@ -93,7 +130,7 @@
     <div class="col-md-4">
         <div class="card">
             <div class="card-header bg-primary text-white">
-                <h5 class="mb-0"><i class="bi bi-info-circle"></i> Information</h5>
+                <h5 class="mb-0"><i class="fa-solid fa-circle-info me-2"></i>Information</h5>
             </div>
             <div class="card-body">
                 <h6>System Information</h6>
@@ -107,28 +144,28 @@
         
         <div class="card mt-3">
             <div class="card-header bg-primary text-white">
-                <h5 class="mb-0"><i class="bi bi-shield-check"></i> Security</h5>
+                <h5 class="mb-0"><i class="fa-solid fa-shield-halved me-2"></i>Security</h5>
             </div>
             <div class="card-body">
                 <p class="small text-muted">
                     This admin area is protected and requires authentication. Only authorized personnel should have access.
                 </p>
                 <a href="{{ url_for('change_password') }}" class="btn btn-outline-primary btn-sm">
-                    <i class="bi bi-key"></i> Change Password
+                    <i class="fa-solid fa-key me-2"></i>Change Password
                 </a>
             </div>
         </div>
 
         <div class="card mt-3">
             <div class="card-header bg-primary text-white">
-                <h5 class="mb-0"><i class="bi bi-clock-history"></i> Audit Logs</h5>
+                <h5 class="mb-0"><i class="fa-solid fa-clock-rotate-left me-2"></i>Audit Logs</h5>
             </div>
             <div class="card-body">
                 <p class="small text-muted">
                     View login attempts, score submissions, and category locks with timestamps.
                 </p>
                 <a href="{{ url_for('admin_logs') }}" class="btn btn-outline-primary btn-sm">
-                    <i class="bi bi-list-ul"></i> View Logs
+                    <i class="fa-solid fa-list me-2"></i>View Logs
                 </a>
             </div>
         </div>

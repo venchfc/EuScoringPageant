@@ -1,7 +1,104 @@
 {% extends "base.html" %}
 
+{% block extra_css %}
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&family=Playfair+Display:wght@600;700&display=swap');
+
+.public-home {
+    font-family: 'Source Sans 3', sans-serif;
+}
+
+.public-hero {
+    background: linear-gradient(135deg, #4a000a 0%, #800000 55%, #5a000b 100%);
+    color: #fff;
+    border-radius: 16px;
+    padding: 36px 40px;
+    display: grid;
+    grid-template-columns: 1.2fr 0.8fr;
+    gap: 28px;
+    align-items: center;
+    box-shadow: 0 16px 40px rgba(80, 0, 0, 0.25);
+}
+
+.public-hero h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.4rem;
+    letter-spacing: 0.5px;
+    margin-bottom: 12px;
+    color: #fff;
+}
+
+.public-hero .kicker {
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 8px;
+}
+
+.public-hero p {
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 1.05rem;
+}
+
+.portal-cta {
+    background: #fff;
+    border-radius: 12px;
+    padding: 22px 24px;
+    color: #2b2b2b;
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+}
+
+.portal-cta h5 {
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+
+.portal-grid {
+    margin-top: 28px;
+}
+
+.portal-card {
+    background: #6b0012;
+    border-radius: 14px;
+    padding: 18px;
+    color: #fff;
+    box-shadow: 0 12px 24px rgba(90, 0, 10, 0.2);
+}
+
+.portal-card h6 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.05rem;
+    margin-top: 8px;
+    color: #fff;
+}
+
+.portal-card small {
+    color: rgba(255, 255, 255, 0.75);
+}
+
+.portal-card .btn {
+    border-color: rgba(255, 255, 255, 0.6);
+    color: #fff;
+}
+
+.portal-card .btn:hover {
+    background: #ff8c00;
+    color: #fff;
+    border-color: #ff8c00;
+}
+
+@media (max-width: 991px) {
+    .public-hero {
+        grid-template-columns: 1fr;
+        padding: 28px;
+    }
+}
+</style>
+{% endblock %}
+
 {% block content %}
-{% if session.get('logged_in') %}
+{% if session.get('logged_in') and session.get('role') == 'admin' %}
     <!-- ADMIN DASHBOARD -->
     <div class="text-center">
         <h1 class="display-4 mb-4">Admin Dashboard</h1>
@@ -13,7 +110,9 @@
                     <div class="card-body text-center">
                         <h5 class="card-title">Categories</h5>
                         <p class="card-text">Manage competition categories and criteria</p>
-                        <a href="{{ url_for('categories') }}" class="btn btn-primary">Manage Categories</a>
+                        <a href="{{ url_for('categories') }}" class="btn btn-primary">
+                            <i class="fa-solid fa-layer-group me-2"></i>Manage Categories
+                        </a>
                     </div>
                 </div>
             </div>
@@ -23,7 +122,9 @@
                     <div class="card-body text-center">
                         <h5 class="card-title">Contestants</h5>
                         <p class="card-text">Add and manage pageant contestants</p>
-                        <a href="{{ url_for('contestants') }}" class="btn btn-primary">Manage Contestants</a>
+                        <a href="{{ url_for('contestants') }}" class="btn btn-primary">
+                            <i class="fa-solid fa-users me-2"></i>Manage Contestants
+                        </a>
                     </div>
                 </div>
             </div>
@@ -33,7 +134,9 @@
                     <div class="card-body text-center">
                         <h5 class="card-title">Judges</h5>
                         <p class="card-text">Add and manage competition judges</p>
-                        <a href="{{ url_for('judges') }}" class="btn btn-primary">Manage Judges</a>
+                        <a href="{{ url_for('judges') }}" class="btn btn-primary">
+                            <i class="fa-solid fa-user-tie me-2"></i>Manage Judges
+                        </a>
                     </div>
                 </div>
             </div>
@@ -45,7 +148,9 @@
                     <div class="card-body text-center">
                         <h5 class="card-title">Results</h5>
                         <p class="card-text">View rankings and final scores</p>
-                        <a href="{{ url_for('results') }}" class="btn btn-primary">View Results</a>
+                        <a href="{{ url_for('results') }}" class="btn btn-primary">
+                            <i class="fa-solid fa-chart-column me-2"></i>View Results
+                        </a>
                     </div>
                 </div>
             </div>
@@ -54,8 +159,10 @@
                 <div class="card h-100 shadow-sm">
                     <div class="card-body text-center">
                         <h5 class="card-title">Scoring</h5>
-                        <p class="card-text">Upload judges' scores and manage scoring</p>
-                        <a href="{{ url_for('scoring_menu') }}" class="btn btn-primary">Enter Scores</a>
+                        <p class="card-text">View tabulator scores (read-only)</p>
+                        <a href="{{ url_for('scoring_menu') }}" class="btn btn-primary">
+                            <i class="fa-solid fa-clipboard-check me-2"></i>View Scores
+                        </a>
                     </div>
                 </div>
             </div>
@@ -65,7 +172,35 @@
                     <div class="card-body text-center">
                         <h5 class="card-title">Settings</h5>
                         <p class="card-text">System settings and administration</p>
-                        <a href="{{ url_for('admin_settings') }}" class="btn btn-primary">Admin Settings</a>
+                        <a href="{{ url_for('admin_settings') }}" class="btn btn-primary">
+                            <i class="fa-solid fa-gear me-2"></i>Admin Settings
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4 mt-3">
+            <div class="col-md-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Competition</h5>
+                        <p class="card-text">Create portals and assign tabulators</p>
+                        <a href="{{ url_for('manage_competition') }}" class="btn btn-primary">
+                            <i class="fa-solid fa-trophy me-2"></i>Manage Competition
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">History</h5>
+                        <p class="card-text">Create history cards for results</p>
+                        <a href="{{ url_for('admin_history') }}" class="btn btn-primary">
+                            <i class="fa-solid fa-clock-rotate-left me-2"></i>View History
+                        </a>
                     </div>
                 </div>
             </div>
@@ -85,29 +220,76 @@
         </div>
     </div>
 
+{% elif session.get('logged_in') and session.get('role') == 'tabulator' %}
+    <!-- TABULATOR DASHBOARD -->
+    <div class="text-center">
+        <h1 class="display-4 mb-3">Tabulator Portal</h1>
+        <p class="lead text-muted mb-4">Access scoring for your assigned competition</p>
+
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card shadow-sm">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Assigned Competition</h5>
+                        <p class="card-text text-muted">
+                            {% if session.get('username') %}Welcome, {{ session.get('username') }}{% endif %}
+                        </p>
+                        <a href="{{ url_for('tabulator_dashboard') }}" class="btn btn-primary">
+                            <i class="fa-solid fa-door-open me-2"></i>Open Portal
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
 {% else %}
     <!-- PUBLIC DASHBOARD -->
-    <div class="text-center">
-        <!-- Hero Section -->
-        <div class="mb-5 py-4">
-            <h1 class="display-3 mb-3" style="color: #800000; font-weight: 700;">
-                <i class="bi bi-trophy-fill"></i> {{ competition_title }}
-            </h1>
-            <p class="lead text-dark" style="font-size: 1.3rem;">Welcome to the Official Scoring System</p>
-            <p class="text-muted" style="font-size: 1.1rem;">Manuel S. Enverga University Foundation - Catanauan Inc</p>
+    <div class="public-home">
+        <div class="public-hero">
+            <div>
+                <div class="kicker">Welcome To</div>
+                <h1>Pageant Scoring System</h1>
+                <p>Manage competitions, input scores, and generate official results with confidence.</p>
+                <p class="mb-0">Manuel S. Enverga University Foundation - Catanauan Inc</p>
+            </div>
+            <div class="portal-cta">
+                <h5>Competitions Portal</h5>
+                <p class="text-muted mb-3">Choose a competition to begin scoring.</p>
+                <a href="{{ url_for('login') }}" class="btn btn-primary">
+                    <i class="fa-solid fa-right-to-bracket me-2"></i>Enter Admin or Tabulator
+                </a>
+            </div>
         </div>
 
-        <div class="mx-auto" style="max-width: 720px;">
-            <p class="text-muted" style="font-size: 1.05rem;">
-                This pageant scoring system is managed by authorized staff. Please use the Admin login to access
-                scoring tools, results, and settings.
-            </p>
-            <a href="{{ url_for('login') }}" class="btn btn-primary">
-                <i class="bi bi-box-arrow-in-right"></i> Admin Login
-            </a>
+        <div class="portal-grid">
+            <h3 class="mb-3" style="font-family: 'Playfair Display', serif; color: #6b0012;">Competition Portals</h3>
+            <div class="row g-4">
+            {% if portals %}
+                {% for portal in portals %}
+                <div class="col-md-4">
+                    <div class="portal-card h-100">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="fa-solid fa-trophy"></i>
+                            <small>Official portal</small>
+                        </div>
+                        <h6>{{ portal.name }}</h6>
+                        <div class="mt-3">
+                            <a href="{{ url_for('portal_public', portal_id=portal.id) }}" class="btn btn-outline-primary btn-sm">
+                                <i class="fa-solid fa-arrow-up-right-from-square me-2"></i>Open Portal
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="col-12">
+                    <div class="alert alert-info">No competition portals available yet.</div>
+                </div>
+            {% endif %}
         </div>
-        
-        <!-- Developer Credit -->
+        </div>
+
         <div class="text-center mt-4">
             <small class="text-muted" style="font-size: 0.75rem;">Developed by Information Technology Department</small>
         </div>
