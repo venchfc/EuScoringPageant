@@ -15,7 +15,7 @@
         {% set division_label = division_labels.get(division, division|title) %}
         {% set division_contestants = contestants_by_division.get(division, []) %}
         <div class="d-flex justify-content-between align-items-center mt-4 mb-2">
-            <h4 class="mb-0" style="color: #800000;">{{ division_label }} Division</h4>
+            <h4 class="mb-0" style="color: #880015;">{{ division_label }} Division</h4>
             <span class="badge bg-secondary">{{ division_contestants|length }}</span>
         </div>
 
@@ -34,7 +34,20 @@
                     {% for contestant in division_contestants %}
                     <tr>
                         <td><strong>{{ contestant.number }}</strong></td>
-                        <td><strong>{{ contestant.name }}</strong></td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                {% if contestant.photo_data_url %}
+                                    <img src="{{ contestant.photo_data_url }}" alt="{{ contestant.name }}" style="width: 36px; height: 36px; object-fit: cover; border-radius: 6px;">
+                                {% elif contestant.photo_filename %}
+                                    <img src="{{ url_for('static', filename='images/contestants/' ~ contestant.photo_filename) }}" alt="{{ contestant.name }}" style="width: 36px; height: 36px; object-fit: cover; border-radius: 6px;">
+                                {% else %}
+                                    <div class="d-flex align-items-center justify-content-center" style="width: 36px; height: 36px; border-radius: 6px; background: #f2f2f2;">
+                                        <i class="bi bi-person-circle" style="color: #888;"></i>
+                                    </div>
+                                {% endif %}
+                                <strong>{{ contestant.name }}</strong>
+                            </div>
+                        </td>
                         <td><span class="text-muted">{{ contestant.created_at.strftime('%Y-%m-%d') }}</span></td>
                         <td>
                             <div class="d-flex gap-2 flex-wrap">

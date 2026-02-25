@@ -16,13 +16,15 @@
         <button onclick="saveScores()" class="btn btn-success me-2">
             <i class="bi bi-save"></i> Save Scores
         </button>
+        {% if session.get('role') == 'admin' %}
         <button onclick="lockCategory()" class="btn btn-primary">
             <i class="bi bi-lock-fill"></i> Lock Category Score
         </button>
+        {% endif %}
     </div>
 </div>
 
-<div class="alert mb-3" style="background-color: #ffffff; border-left: 4px solid #800000; color: #800000;">
+<div class="alert mb-3" style="background-color: #ffffff; border-left: 4px solid #880015; color: #880015;">
     <i class="bi bi-person-badge"></i> <strong>Select Judge:</strong>
     <select id="judgeSelect" class="form-select d-inline-block ms-2" style="width: 350px;" onchange="loadJudgeScores()">
         <option value="">-- Select a Judge --</option>
@@ -296,6 +298,12 @@ function lockCategory() {
     .catch(error => {
         alert('Error locking category: ' + error);
     });
+}
+
+const socket = window.AppSocket;
+if (socket) {
+    socket.on('scores_update', () => window.location.reload());
+    socket.on('category_update', () => window.location.reload());
 }
 </script>
 {% endblock %}

@@ -7,7 +7,7 @@
 
 <div class="card">
     <div class="card-body">
-        <form method="POST">
+        <form method="POST" enctype="multipart/form-data">
             <div class="mb-3">
                 <label for="number" class="form-label">Contestant Number</label>
                 <input type="number" class="form-control" id="number" name="number" required 
@@ -31,6 +31,12 @@
                     <option value="unspecified">Unassigned</option>
                 </select>
                 <div class="form-text">Used to separate results by division</div>
+            </div>
+
+            <div class="mb-3">
+                <label for="photo" class="form-label">Profile Photo</label>
+                <input type="file" class="form-control" id="photo" name="photo" accept="image/*">
+                <div class="form-text">Optional, but recommended for judge scoring cards</div>
             </div>
             
             <div class="d-flex gap-2">

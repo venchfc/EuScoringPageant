@@ -17,6 +17,7 @@
                 <tr>
                     <th style="width: 110px;">Judge #</th>
                     <th>Name</th>
+                    <th>Username</th>
                     <th style="width: 160px;">Added</th>
                     <th style="width: 160px;">Actions</th>
                 </tr>
@@ -26,6 +27,7 @@
                 <tr>
                     <td><strong>{{ judge.number }}</strong></td>
                     <td><strong>{{ judge.name }}</strong></td>
+                    <td>{{ judge.username or '-' }}</td>
                     <td><span class="text-muted">{{ judge.created_at.strftime('%Y-%m-%d') }}</span></td>
                     <td>
                         <div class="d-flex gap-2 flex-wrap">

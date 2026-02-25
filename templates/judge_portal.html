@@ -1,0 +1,540 @@
+{% extends "base.html" %}
+
+{% block title %}Judge Scoring{% endblock %}
+
+{% block extra_css %}
+<style>
+    .contestant-section-title {
+        color: #7a0013;
+        font-weight: 700;
+        margin: 28px 0 12px;
+    }
+
+    .judge-header {
+        position: relative;
+        text-align: center;
+        margin-bottom: 18px;
+    }
+
+    .judge-subtitle {
+        color: #6c757d;
+        margin-top: 4px;
+    }
+
+    .judge-name {
+        color: #880015;
+        font-weight: 700;
+    }
+
+    .transmit-float {
+        position: absolute;
+        right: 0;
+        top: 0;
+    }
+
+    .active-criteria-bar {
+        background: #eaf7ef;
+        border: 1px solid #bfe5c9;
+        border-radius: 10px;
+        padding: 10px 16px;
+        text-align: center;
+        font-weight: 600;
+        color: #1f6f3f;
+    }
+
+    @media (max-width: 768px) {
+        .transmit-float {
+            position: static;
+            margin-top: 12px;
+            display: flex;
+            justify-content: center;
+        }
+    }
+
+    .contestant-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(185px, 1fr));
+        gap: 18px;
+    }
+
+    .contestant-card {
+        position: relative;
+        border-radius: 14px;
+        overflow: hidden;
+        background: #ffffff;
+        border: 1px solid #e8e8e8;
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+        padding: 16px 12px 18px;
+    }
+
+    .card-top-bar {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 10px;
+        background: linear-gradient(90deg, #7a0013 0%, #a00018 100%);
+    }
+
+    .card-badge {
+        position: absolute;
+        top: 4px;
+        left: 6px;
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
+        background: #ffffff;
+        color: #0b2e59;
+        font-weight: 800;
+        font-size: 1.15rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 4px solid #2b6cb0;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.28);
+    }
+
+    .card-badge::after {
+        content: '';
+        position: absolute;
+        bottom: -32px;
+        left: 50%;
+        width: 36px;
+        height: 38px;
+        background: #2b6cb0;
+        clip-path: polygon(0 0, 100% 0, 74% 100%, 50% 78%, 26% 100%);
+        border-radius: 2px;
+        box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.12);
+        transform: translateX(-50%);
+    }
+
+    .card-status-dot {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #b71c1c;
+        border: 2px solid #ffffff;
+        box-shadow: 0 0 0 2px #b71c1c;
+    }
+
+    .card-status-dot.completed {
+        background: #28a745;
+        box-shadow: 0 0 0 2px #28a745;
+    }
+
+    .card-photo {
+        width: 112px;
+        height: 112px;
+        border-radius: 50%;
+        overflow: hidden;
+        background: #f2f2f2;
+        margin: 28px auto 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 3px solid #e5e5e5;
+    }
+
+    .card-photo img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .card-name {
+        font-weight: 600;
+        font-size: 0.9rem;
+        min-height: 44px;
+        line-height: 1.25;
+    }
+
+    .score-badge {
+        font-size: 0.85rem;
+    }
+
+    .score-badge.score-complete {
+        background-color: #28a745 !important;
+        color: #ffffff !important;
+    }
+
+    .score-display {
+        color: #198754;
+        font-weight: 700;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="judge-header">
+    <h2 class="mb-1">Judge Scoring</h2>
+    <div class="judge-subtitle">Welcome <span class="judge-name">{{ judge.name }}</span>! Select a contestant to input a score.</div>
+    <div class="transmit-float">
+        <button id="transmitBtn" class="btn btn-primary" onclick="transmitScores()" {% if submitted or category_locked or not scoring_enabled %}disabled{% endif %}>
+            <i class="bi bi-send"></i> Transmit Scores
+        </button>
+    </div>
+</div>
+
+{% if not categories %}
+    <div class="alert alert-info">
+        No categories available yet.
+    </div>
+{% else %}
+    {% if active_category_id %}
+        <div class="active-criteria-bar">
+            Active Criteria: <span id="activeCategoryName">{{ active_category_name }}</span>
+        </div>
+    {% else %}
+        <div class="alert alert-danger">
+            <i class="bi bi-x-circle"></i> No Active Category Yet
+        </div>
+    {% endif %}
+    <div class="mb-4">
+        {% if category_locked %}
+            <div class="alert alert-warning mb-0">This category is locked by admin. Scoring is closed.</div>
+        {% elif submitted %}
+            <div class="alert alert-success mb-0">Scores transmitted. Editing is disabled.</div>
+        {% elif not scoring_enabled %}
+            <div class="alert alert-danger mb-0">No Active Category Yet</div>
+        {% else %}
+            <div class="alert alert-info mb-0">Complete all scores before transmitting.</div>
+        {% endif %}
+    </div>
+
+    {% if not criteria %}
+        <div class="alert alert-warning">No criteria defined for this category.</div>
+    {% else %}
+        {% if contestants %}
+            {% set female_contestants = contestants|selectattr('division', 'equalto', 'female')|list %}
+            {% set male_contestants = contestants|selectattr('division', 'equalto', 'male')|list %}
+            {% set other_contestants = contestants|rejectattr('division', 'equalto', 'female')|rejectattr('division', 'equalto', 'male')|list %}
+
+            {% macro render_contestant_card(contestant, scores, criteria_count, submitted, category_locked, scoring_enabled) %}
+                <div class="contestant-card">
+                    <div class="card-top-bar"></div>
+                    <div class="card-badge">#{{ contestant.number }}</div>
+                    <div class="card-status-dot" id="status-dot-{{ contestant.id }}"></div>
+                    <div class="card-photo">
+                        {% if contestant.photo_data_url %}
+                            <img src="{{ contestant.photo_data_url }}" alt="{{ contestant.name }}">
+                        {% elif contestant.photo_filename %}
+                            <img src="{{ url_for('static', filename='images/contestants/' ~ contestant.photo_filename) }}" alt="{{ contestant.name }}">
+                        {% else %}
+                            <i class="bi bi-person-circle" style="font-size: 2.5rem; color: #888;"></i>
+                        {% endif %}
+                    </div>
+                    <div class="text-center">
+                        <div class="card-name">{{ contestant.name }}</div>
+                        <div class="mt-2">
+                            <span class="badge bg-secondary score-badge" id="score-display-{{ contestant.id }}">
+                                Scores: 0/{{ criteria_count }}
+                            </span>
+                        </div>
+                        <div class="mt-3">
+                            <button class="btn btn-warning w-100" onclick="openScoreModal({{ contestant.id }}, '{{ contestant.name|e }}', {{ contestant.number }})" {% if submitted or category_locked or not scoring_enabled %}disabled{% endif %}>
+                                <i class="bi bi-pencil-square"></i> Score
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            {% endmacro %}
+
+            {% if female_contestants %}
+                <h5 class="contestant-section-title">Female Contestants</h5>
+                <div class="contestant-grid">
+                    {% for contestant in female_contestants %}
+                        {{ render_contestant_card(contestant, scores, criteria|length, submitted, category_locked, scoring_enabled) }}
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            {% if male_contestants %}
+                <h5 class="contestant-section-title">Male Contestants</h5>
+                <div class="contestant-grid">
+                    {% for contestant in male_contestants %}
+                        {{ render_contestant_card(contestant, scores, criteria|length, submitted, category_locked, scoring_enabled) }}
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            {% if other_contestants %}
+                <h5 class="contestant-section-title">Unassigned Contestants</h5>
+                <div class="contestant-grid">
+                    {% for contestant in other_contestants %}
+                        {{ render_contestant_card(contestant, scores, criteria|length, submitted, category_locked, scoring_enabled) }}
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% else %}
+            <div class="alert alert-info">No eligible contestants for this category yet.</div>
+        {% endif %}
+    {% endif %}
+{% endif %}
+
+<div class="modal fade" id="scoreModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Enter Score</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-2 text-muted" id="modalCriteria"></div>
+                <div class="mb-2 fw-bold" id="modalContestant"></div>
+                <div id="criteriaFields">
+                    {% for crit in criteria %}
+                        <div class="mb-3">
+                            <div class="fw-semibold">
+                                {{ crit.name }} ({{ crit.percentage }}%)
+                                <span class="ms-2 score-display" data-criteria-percent="{{ crit.percentage }}" data-criteria-id="{{ crit.id }}">
+                                    Score: 0.00%
+                                </span>
+                            </div>
+                            <div class="row g-2 align-items-center">
+                                <div class="col-12">
+                                    <input type="number" class="form-control score-input d-none" data-criteria-id="{{ crit.id }}" data-criteria-percent="{{ crit.percentage }}" min="0" max="10" step="0.01">
+                                    <input type="range" class="form-range score-slider" data-criteria-id="{{ crit.id }}" data-criteria-percent="{{ crit.percentage }}" min="0" max="10" step="0.01">
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveScore()">Update Score</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script type="application/json" id="judge-data">
+{
+    "categoryId": {{ category.id if category else 'null' }},
+    "activeCriteriaId": {{ active_criteria.id if active_criteria else 'null' }},
+    "criteriaIds": {{ criteria|map(attribute='id')|list|tojson }},
+    "contestantIds": {{ contestants|map(attribute='id')|list|tojson }},
+    "scores": {{ scores|tojson }},
+    "scoreMatrix": {{ score_matrix|tojson }},
+    "submitted": {{ submitted|tojson }},
+    "categoryLocked": {{ category_locked|tojson }},
+    "scoringEnabled": {{ scoring_enabled|tojson }}
+}
+</script>
+<script>
+const judgeData = JSON.parse(document.getElementById('judge-data').textContent);
+let currentContestantId = null;
+const socket = window.AppSocket;
+
+function onCategoryChange() {
+    const categoryId = document.getElementById('categorySelect').value;
+    window.location.href = `?category_id=${categoryId}`;
+}
+
+function openScoreModal(contestantId, contestantName, contestantNumber) {
+    currentContestantId = contestantId;
+    const activeName = document.getElementById('activeCategoryName');
+    const activeLabel = activeName ? activeName.textContent.trim() : 'Active Category';
+    document.getElementById('modalCriteria').textContent = `Active Category: ${activeLabel}`;
+    document.getElementById('modalContestant').textContent = `#${contestantNumber} - ${contestantName}`;
+    document.querySelectorAll('.score-input').forEach(input => {
+        const criteriaId = input.dataset.criteriaId;
+        const value = getScore(criteriaId, contestantId);
+        input.value = value === null ? '' : value;
+    });
+    document.querySelectorAll('.score-slider').forEach(slider => {
+        const criteriaId = slider.dataset.criteriaId;
+        const value = getScore(criteriaId, contestantId);
+        slider.value = value === null ? 0 : value;
+    });
+    updateCriteriaPercentages();
+    const modal = new bootstrap.Modal(document.getElementById('scoreModal'));
+    modal.show();
+}
+
+function getScore(criteriaId, contestantId) {
+    if (!criteriaId) return null;
+    const criteriaScores = judgeData.scoreMatrix[criteriaId] || {};
+    const value = criteriaScores[contestantId];
+    return value === undefined ? null : value;
+}
+
+function setScore(criteriaId, contestantId, score) {
+    if (!judgeData.scoreMatrix[criteriaId]) {
+        judgeData.scoreMatrix[criteriaId] = {};
+    }
+    judgeData.scoreMatrix[criteriaId][contestantId] = score;
+}
+
+function updateTransmitState() {
+    const transmitBtn = document.getElementById('transmitBtn');
+    if (!transmitBtn) return;
+    if (!judgeData.scoringEnabled || judgeData.submitted || judgeData.categoryLocked) {
+        transmitBtn.disabled = true;
+        return;
+    }
+    if (!judgeData.criteriaIds.length || !judgeData.contestantIds.length) {
+        transmitBtn.disabled = true;
+        return;
+    }
+    let allComplete = true;
+    judgeData.criteriaIds.forEach(criteriaId => {
+        judgeData.contestantIds.forEach(contestantId => {
+            const value = getScore(criteriaId, contestantId);
+            if (value === null || value === '') {
+                allComplete = false;
+            }
+        });
+    });
+    transmitBtn.disabled = !allComplete;
+}
+
+function syncScoreInputs() {
+    document.querySelectorAll('.score-input').forEach(input => {
+        input.addEventListener('input', () => {
+            const criteriaId = input.dataset.criteriaId;
+            const slider = document.querySelector(`.score-slider[data-criteria-id="${criteriaId}"]`);
+            if (slider) slider.value = input.value || 0;
+            updateCriteriaPercentage(criteriaId);
+        });
+    });
+    document.querySelectorAll('.score-slider').forEach(slider => {
+        slider.addEventListener('input', () => {
+            const criteriaId = slider.dataset.criteriaId;
+            const input = document.querySelector(`.score-input[data-criteria-id="${criteriaId}"]`);
+            if (input) input.value = slider.value;
+            updateCriteriaPercentage(criteriaId);
+        });
+    });
+}
+
+function updateCriteriaPercentage(criteriaId) {
+    const input = document.querySelector(`.score-input[data-criteria-id="${criteriaId}"]`);
+    const percentLabel = document.querySelector(`[data-criteria-id="${criteriaId}"][data-criteria-percent]`);
+    if (!input || !percentLabel) return;
+    const criteriaPercent = parseFloat(input.dataset.criteriaPercent || '0');
+    const scoreValue = parseFloat(input.value);
+    if (Number.isNaN(scoreValue)) {
+        percentLabel.textContent = 'Score: 0.00%';
+        return;
+    }
+    const weighted = (scoreValue / 10) * criteriaPercent;
+    percentLabel.textContent = `Score: ${weighted.toFixed(2)}%`;
+}
+
+function updateCriteriaPercentages() {
+    judgeData.criteriaIds.forEach(criteriaId => updateCriteriaPercentage(criteriaId));
+}
+
+function updateScoreBadge(contestantId) {
+    const total = judgeData.criteriaIds.length;
+    let completed = 0;
+    judgeData.criteriaIds.forEach(criteriaId => {
+        const value = getScore(criteriaId, contestantId);
+        if (value !== null && value !== '') {
+            completed += 1;
+        }
+    });
+    const badge = document.getElementById(`score-display-${contestantId}`);
+    const dot = document.getElementById(`status-dot-${contestantId}`);
+    const isComplete = total > 0 && completed === total;
+    if (badge) {
+        badge.textContent = `Scores: ${completed}/${total}`;
+        badge.classList.toggle('bg-secondary', !isComplete);
+        badge.classList.toggle('score-complete', isComplete);
+    }
+    if (dot) {
+        dot.classList.toggle('completed', isComplete);
+    }
+}
+
+function saveScore() {
+    if (!currentContestantId) return;
+    const scoreInputs = Array.from(document.querySelectorAll('.score-input'));
+    const payloads = [];
+
+    for (const input of scoreInputs) {
+        const criteriaId = input.dataset.criteriaId;
+        const scoreValue = parseFloat(input.value);
+        if (Number.isNaN(scoreValue) || scoreValue < 0 || scoreValue > 10) {
+            alert('Score must be between 0 and 10 for all criteria.');
+            return;
+        }
+        payloads.push({
+            contestant_id: currentContestantId,
+            criteria_id: criteriaId,
+            score: scoreValue
+        });
+    }
+
+    Promise.all(payloads.map(payload =>
+        fetch('/judge/score', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        }).then(response => response.json())
+    )).then(results => {
+        const failure = results.find(result => !result.success);
+        if (failure) {
+            alert(failure.message || 'Unable to save score.');
+            return;
+        }
+        payloads.forEach(payload => {
+            setScore(payload.criteria_id, currentContestantId, payload.score);
+        });
+        updateScoreBadge(currentContestantId);
+        updateTransmitState();
+        const modalElement = document.getElementById('scoreModal');
+        const modal = bootstrap.Modal.getInstance(modalElement);
+        modal.hide();
+    }).catch(() => {
+        alert('Unable to save scores.');
+    });
+}
+
+function transmitScores() {
+    fetch('/judge/transmit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ category_id: judgeData.categoryId })
+    }).then(response => response.json()).then(data => {
+        if (!data.success) {
+            alert(data.message || 'Unable to transmit scores.');
+            return;
+        }
+        judgeData.submitted = true;
+        document.querySelectorAll('.contestant-card button').forEach(btn => btn.disabled = true);
+        const transmitBtn = document.getElementById('transmitBtn');
+        if (transmitBtn) transmitBtn.disabled = true;
+        alert('Scores transmitted successfully.');
+    }).catch(() => {
+        alert('Unable to transmit scores.');
+    });
+}
+
+syncScoreInputs();
+judgeData.contestantIds.forEach(updateScoreBadge);
+updateCriteriaPercentages();
+updateTransmitState();
+
+if (socket) {
+    socket.on('category_update', payload => {
+        if (!payload) {
+            window.location.reload();
+            return;
+        }
+        const activeId = payload.active_category_id;
+        const lockedId = payload.locked_category_id;
+        if (activeId !== judgeData.categoryId || lockedId === judgeData.categoryId) {
+            window.location.reload();
+        }
+    });
+    setInterval(() => socket.emit('portal_ping'), 60000);
+}
+</script>
+{% endblock %}

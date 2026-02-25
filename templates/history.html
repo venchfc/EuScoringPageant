@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}Competition History{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Competition History</h2>
+</div>
+
+{% if entries %}
+    {% for entry in entries %}
+        <div class="card mb-3">
+            <div class="card-body d-flex flex-wrap justify-content-between align-items-center gap-3">
+                <div>
+                    <h5 class="mb-1">{{ entry.competition_title }}</h5>
+                    <div class="text-muted">Closed {{ entry.closed_at.strftime('%Y-%m-%d %H:%M') }}</div>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{{ url_for('history_view', history_id=entry.id) }}" class="btn btn-primary">
+                        View Results
+                    </a>
+                    <a href="{{ url_for('history_pdf', history_id=entry.id) }}" class="btn btn-outline-primary" target="_blank">
+                        Download PDF
+                    </a>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+{% else %}
+    <div class="alert alert-info">No competition history yet.</div>
+{% endif %}
+{% endblock %}

@@ -1,7 +1,88 @@
 {% extends "base.html" %}
 
+{% block extra_css %}
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Source+Sans+3:wght@400;500&display=swap');
+
+    .landing-hero {
+        background: linear-gradient(135deg, #880015 0%, #880015 100%);
+        color: #ffffff;
+        border-radius: 16px;
+        padding: 48px 36px;
+        margin-bottom: 24px;
+    }
+    .landing-hero h1 {
+        color: #ffffff;
+        font-family: 'Playfair Display', Georgia, serif;
+        font-weight: 700;
+        line-height: 1.1;
+    }
+    .landing-desc {
+        font-family: 'Source Sans 3', 'Segoe UI', Arial, sans-serif;
+        font-size: 1.1rem;
+        color: #f4d7d9;
+    }
+    .landing-tag {
+        letter-spacing: 0.2em;
+        font-size: 0.8rem;
+        color: #d88c2b;
+        font-family: 'Source Sans 3', 'Segoe UI', Arial, sans-serif;
+    }
+    .landing-login {
+        margin-top: 18px;
+    }
+    .landing-panel {
+        background: rgba(255, 255, 255, 0.08);
+        padding: 16px;
+        border-radius: 16px;
+    }
+    .landing-card {
+        background: #ffffff;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+    }
+    .landing-card .btn {
+        padding: 10px 18px;
+    }
+    @media (max-width: 991px) {
+        .landing-hero {
+            padding: 32px 24px;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 {% if session.get('logged_in') %}
+    {% if session.get('role') == 'tabulator' %}
+    <!-- TABULATOR DASHBOARD -->
+    <div class="text-center">
+        <h1 class="display-4 mb-4">Tabulator Dashboard</h1>
+        <p class="lead mb-5">Review and correct judge scores</p>
+
+        <div class="row g-4">
+            <div class="col-md-6">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Scoring</h5>
+                        <p class="card-text">Edit submitted scores when needed</p>
+                        <a href="{{ url_for('scoring_menu') }}" class="btn btn-primary">Open Scoring</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Results</h5>
+                        <p class="card-text">View updated results and standings</p>
+                        <a href="{{ url_for('results') }}" class="btn btn-primary">View Results</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
     <!-- ADMIN DASHBOARD -->
     <div class="text-center">
         <h1 class="display-4 mb-4">Admin Dashboard</h1>
@@ -53,16 +134,6 @@
             <div class="col-md-4">
                 <div class="card h-100 shadow-sm">
                     <div class="card-body text-center">
-                        <h5 class="card-title">Scoring</h5>
-                        <p class="card-text">Upload judges' scores and manage scoring</p>
-                        <a href="{{ url_for('scoring_menu') }}" class="btn btn-primary">Enter Scores</a>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-4">
-                <div class="card h-100 shadow-sm">
-                    <div class="card-body text-center">
                         <h5 class="card-title">Settings</h5>
                         <p class="card-text">System settings and administration</p>
                         <a href="{{ url_for('admin_settings') }}" class="btn btn-primary">Admin Settings</a>
@@ -84,32 +155,30 @@
             </ol>
         </div>
     </div>
+    {% endif %}
 
+{% elif session.get('judge_logged_in') %}
+    <div class="text-center">
+        <h1 class="display-4 mb-3">Judge Portal</h1>
+        <p class="lead mb-4">Continue scoring in your assigned category.</p>
+        <a href="{{ url_for('judge_portal') }}" class="btn btn-primary">Go to Judge Portal</a>
+    </div>
 {% else %}
     <!-- PUBLIC DASHBOARD -->
-    <div class="text-center">
-        <!-- Hero Section -->
-        <div class="mb-5 py-4">
-            <h1 class="display-3 mb-3" style="color: #800000; font-weight: 700;">
-                <i class="bi bi-trophy-fill"></i> {{ competition_title }}
-            </h1>
-            <p class="lead text-dark" style="font-size: 1.3rem;">Welcome to the Official Scoring System</p>
-            <p class="text-muted" style="font-size: 1.1rem;">Manuel S. Enverga University Foundation - Catanauan Inc</p>
-        </div>
-
-        <div class="mx-auto" style="max-width: 720px;">
-            <p class="text-muted" style="font-size: 1.05rem;">
-                This pageant scoring system is managed by authorized staff. Please use the Admin login to access
-                scoring tools, results, and settings.
-            </p>
-            <a href="{{ url_for('login') }}" class="btn btn-primary">
-                <i class="bi bi-box-arrow-in-right"></i> Admin Login
-            </a>
-        </div>
-        
-        <!-- Developer Credit -->
-        <div class="text-center mt-4">
-            <small class="text-muted" style="font-size: 0.75rem;">Developed by Information Technology Department</small>
+    <div class="landing-hero">
+        <div class="row g-4 align-items-center">
+            <div class="col-lg-7">
+                <div class="landing-tag">WELCOME TO</div>
+                <h1 class="display-4 mt-3 mb-3">MSEUF Tabulation System</h1>
+                <p class="landing-desc mb-0">Manage competitions, input scores, and generate official results with confidence.</p>
+            </div>
+            <div class="col-lg-5">
+                <div class="landing-panel">
+                    <div class="landing-card">
+                        <a href="{{ url_for('login') }}" class="btn btn-primary">Click to Login</a>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 {% endif %}

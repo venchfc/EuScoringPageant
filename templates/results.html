@@ -22,21 +22,21 @@
         align-items: center;
     }
     .first-place {
-        background: linear-gradient(135deg, #800000 0%, #600000 100%);
+        background: linear-gradient(135deg, #880015 0%, #880015 100%);
         height: 280px;
         width: 200px;
         order: 2;
         border: 4px solid white;
     }
     .second-place {
-        background: linear-gradient(135deg, #a00000 0%, #800000 100%);
+        background: linear-gradient(135deg, #880015 0%, #880015 100%);
         height: 240px;
         width: 180px;
         order: 1;
         border: 3px solid white;
     }
     .third-place {
-        background: linear-gradient(135deg, #c00000 0%, #a00000 100%);
+        background: linear-gradient(135deg, #880015 0%, #880015 100%);
         height: 200px;
         width: 180px;
         order: 3;
@@ -86,15 +86,37 @@
 </style>
 {% endblock %}
 
+{% block extra_js %}
+<script>
+const socket = window.AppSocket;
+if (socket) {
+    socket.on('scores_update', () => window.location.reload());
+    socket.on('category_update', () => window.location.reload());
+}
+</script>
+{% endblock %}
+
 {% block content %}
 <h2 class="mb-4 text-center">{{ competition_title }} Results</h2>
+
+{% if read_only_mode %}
+    <div class="alert alert-info">
+        <i class="bi bi-info-circle"></i> Read-only view for administrators.
+    </div>
+{% endif %}
 
 {% if round1_locked or round2_locked or round3_locked %}
     {% if divisions %}
         {% set primary_divisions = ['female', 'male'] %}
 
         <div class="mt-4">
-            <h3 class="mb-3 text-center" style="color: #800000;">Round 1 Final Results</h3>
+            <h3 class="mb-3 text-center" style="color: #880015;">Round 1 Final Results</h3>
+
+            {% if round1_partial %}
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle"></i> Showing categories with complete judge submissions only.
+                </div>
+            {% endif %}
 
             {% if round1_locked %}
                 {% for division in primary_divisions %}
@@ -162,7 +184,7 @@
                             {% if show_category_winners and category_winners_by_division.get(division) %}
                             {% set division_winners = category_winners_by_division.get(division) %}
                             <div class="mt-4">
-                                <h4 class="mb-3 text-center" style="color: #800000;">Category Winners - {{ division_label }}</h4>
+                                <h4 class="mb-3 text-center" style="color: #880015;">Category Winners - {{ division_label }}</h4>
                                 <div class="table-responsive">
                                     <table class="table">
                                         <thead class="table-dark">
@@ -176,13 +198,20 @@
                                         <tbody>
                                             {% for category in round1_categories %}
                                                 {% if category.name in division_winners %}
+                                                {% set winner_entry = division_winners[category.name] %}
                                                 <tr>
                                                     <td><strong>{{ category.name }}</strong></td>
                                                     <td>
-                                                        <strong>{{ division_winners[category.name].contestant.name }}</strong>
+                                                        {% for winner in winner_entry.winners %}
+                                                            <strong>{{ winner.contestant.name }}</strong>{% if not loop.last %}, {% endif %}
+                                                        {% endfor %}
                                                     </td>
-                                                    <td><strong>{{ division_winners[category.name].contestant.number }}</strong></td>
-                                                    <td><strong style="color: #000000;">{{ "%.4f"|format(division_winners[category.name].score) }}</strong></td>
+                                                    <td>
+                                                        {% for winner in winner_entry.winners %}
+                                                            <strong>{{ winner.contestant.number }}</strong>{% if not loop.last %}, {% endif %}
+                                                        {% endfor %}
+                                                    </td>
+                                                    <td><strong style="color: #000000;">{{ "%.4f"|format(winner_entry.score) }}</strong></td>
                                                 </tr>
                                                 {% endif %}
                                             {% endfor %}
@@ -207,7 +236,12 @@
         </div>
 
         <div class="mt-5">
-            <h3 class="mb-3 text-center" style="color: #800000;">Round 2 Results</h3>
+            <h3 class="mb-3 text-center" style="color: #880015;">Round 2 Results</h3>
+            {% if round2_partial %}
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle"></i> Showing categories with complete judge submissions only.
+                </div>
+            {% endif %}
             {% if round2_locked %}
                 {% for division in primary_divisions %}
                     {% if division in divisions %}
@@ -273,7 +307,12 @@
         </div>
 
         <div class="mt-5">
-            <h3 class="mb-3 text-center" style="color: #800000;">Round 3 Results</h3>
+            <h3 class="mb-3 text-center" style="color: #880015;">Round 3 Results</h3>
+            {% if round3_partial %}
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle"></i> Showing categories with complete judge submissions only.
+                </div>
+            {% endif %}
             {% if round3_locked %}
                 {% for division in primary_divisions %}
                     {% if division in divisions %}

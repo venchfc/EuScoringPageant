@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+
+{% block title %}Live Monitoring{% endblock %}
+
+{% block extra_css %}
+<style>
+    .monitor-badge-success {
+        background-color: #28a745 !important;
+        color: #ffffff !important;
+    }
+
+    .monitor-badge-muted {
+        background-color: #95a5a6 !important;
+        color: #ffffff !important;
+    }
+
+    .monitor-progress-complete {
+        background-color: #28a745 !important;
+    }
+
+    .monitor-progress-pending {
+        background-color: #ff8c00 !important;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const socket = window.AppSocket;
+if (socket) {
+    socket.on('scores_update', () => window.location.reload());
+    socket.on('portal_update', () => window.location.reload());
+}
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h2>Live Monitoring</h2>
+        <p class="text-muted mb-0">Track judge submissions and portal activity in real time.</p>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header">Category Score Progress</div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Category</th>
+                        <th>Scores Entered</th>
+                        <th style="width: 220px;">Progress</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if not categories_data %}
+                        <tr>
+                            <td colspan="3" class="text-center text-muted">No categories available.</td>
+                        </tr>
+                    {% else %}
+                        {% for entry in categories_data %}
+                            <tr>
+                                <td><strong>{{ entry.category.name }}</strong></td>
+                                <td>{{ entry.actual_scores }}/{{ entry.expected_scores }}</td>
+                                <td>
+                                    <div class="progress" style="height: 20px;">
+                                        <div class="progress-bar {{ 'monitor-progress-complete' if entry.complete else 'monitor-progress-pending' }}" role="progressbar" style="width: {{ entry.percent }}%;">
+                                            {{ entry.percent }}%
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+        <div class="text-muted mt-2">Turns green when all expected scores are entered.</div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">Judge Portal Status</div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Judge</th>
+                        <th>Logged In</th>
+                        <th>In Portal</th>
+                        <th>Last Portal Activity</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if not judges_data %}
+                        <tr>
+                            <td colspan="4" class="text-center text-muted">No judges found.</td>
+                        </tr>
+                    {% else %}
+                        {% for entry in judges_data %}
+                            <tr>
+                                <td>{{ entry.judge.name }}</td>
+                                <td>
+                                    <span class="badge {{ 'monitor-badge-success' if entry.logged_in else 'monitor-badge-muted' }}">
+                                        {{ 'Yes' if entry.logged_in else 'No' }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge {{ 'monitor-badge-success' if entry.in_portal else 'monitor-badge-muted' }}">
+                                        {{ 'Active' if entry.in_portal else 'Inactive' }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if entry.last_portal_at %}
+                                        {{ entry.last_portal_at.strftime('%Y-%m-%d %H:%M:%S') }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+        <div class="text-muted mt-2">"In Portal" means activity within the last {{ portal_window_minutes }} minutes.</div>
+    </div>
+</div>
+{% endblock %}

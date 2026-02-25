@@ -77,6 +77,7 @@
                     <li>All contestants</li>
                     <li>All judges</li>
                     <li>All scores</li>
+                    <li>All competition history</li>
                 </ul>
                 <div class="alert alert-warning">
                     <i class="bi bi-exclamation-triangle-fill"></i> <strong>Warning:</strong>  This feature is available in all environments. Use when you need to completely clear all data and start fresh.
@@ -129,6 +130,20 @@
                 </p>
                 <a href="{{ url_for('admin_logs') }}" class="btn btn-outline-primary btn-sm">
                     <i class="bi bi-list-ul"></i> View Logs
+                </a>
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-clock-history"></i> History</h5>
+            </div>
+            <div class="card-body">
+                <p class="small text-muted">
+                    Review past competitions and download archived results.
+                </p>
+                <a href="{{ url_for('history') }}" class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-folder2-open"></i> View History
                 </a>
             </div>
         </div>

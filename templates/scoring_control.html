@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}Scoring Control{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2>Scoring Control</h2>
+        <p class="text-muted mb-0">Activate one category at a time for judges to score.</p>
+    </div>
+    <form method="POST" action="{{ url_for('scoring_control_deactivate') }}">
+        <button type="submit" class="btn btn-outline-secondary" {% if not active_category %}disabled{% endif %}>
+            <i class="fa-solid fa-circle-xmark"></i> Deactivate
+        </button>
+    </form>
+</div>
+
+{% if active_category %}
+    <div class="alert alert-success">
+        <i class="bi bi-check-circle"></i> Active Category: <strong>{{ active_category.name }}</strong>
+    </div>
+{% else %}
+    <div class="alert alert-danger">
+        <i class="bi bi-x-circle"></i> No Active Category Yet
+    </div>
+{% endif %}
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Category</th>
+                        <th>Round</th>
+                        <th>Criteria</th>
+                        <th>Progress</th>
+                        <th>Status</th>
+                        <th style="width: 220px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for entry in entries %}
+                    {% set category = entry.category %}
+                    <tr>
+                        <td><strong>{{ category.name }}</strong></td>
+                        <td>{{ category.round|title }}</td>
+                        <td>{{ entry.criteria_count }}</td>
+                        <td>
+                            {% if entry.expected > 0 %}
+                                {{ entry.actual }}/{{ entry.expected }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if category.is_locked %}
+                                <span class="badge bg-secondary">Locked</span>
+                            {% elif entry.is_active %}
+                                <span class="badge badge-active">Active</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="d-flex gap-2 flex-wrap">
+                                <form method="POST" action="{{ url_for('scoring_control_activate', category_id=category.id) }}">
+                                    <button type="submit" class="btn btn-activate btn-sm" {% if entry.activate_disabled or category.is_locked %}disabled{% endif %}>
+                                        <i class="fa-solid fa-play"></i> Activate
+                                    </button>
+                                </form>
+                                <button type="button" class="btn btn-danger btn-sm" onclick="lockCategory({{ category.id }})" {% if not entry.can_lock %}disabled{% endif %}>
+                                    <i class="fa-solid fa-lock"></i> Lock
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function lockCategory(categoryId) {
+    if (!confirm('Lock this category? This will finalize all scores and cannot be undone.')) {
+        return;
+    }
+    fetch(`/category/${categoryId}/lock`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+    }).then(response => response.json()).then(data => {
+        if (!data.success) {
+            alert(data.message || 'Unable to lock category.');
+            return;
+        }
+        window.location.reload();
+    }).catch(() => {
+        alert('Unable to lock category.');
+    });
+}
+
+const socket = window.AppSocket;
+if (socket) {
+    socket.on('category_update', () => window.location.reload());
+    socket.on('scores_update', () => window.location.reload());
+}
+</script>
+{% endblock %}
