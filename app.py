@@ -15,9 +15,27 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
 from reportlab.lib.enums import TA_CENTER
 
+def build_database_uri():
+    database_url = os.getenv('DATABASE_URL')
+    if database_url:
+        return database_url
+
+    db_user = os.getenv('DB_USER')
+    db_pass = os.getenv('DB_PASS')
+    db_name = os.getenv('DB_NAME')
+    instance = os.getenv('INSTANCE_CONNECTION_NAME')
+    if all([db_user, db_pass, db_name, instance]):
+        return (
+            f"postgresql+psycopg2://{db_user}:{db_pass}@/{db_name}"
+            f"?host=/cloudsql/{instance}"
+        )
+
+    return 'sqlite:///pageant.db'
+
+
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'your-secret-key-change-this'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///pageant.db'
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'your-secret-key-change-this')
+app.config['SQLALCHEMY_DATABASE_URI'] = build_database_uri()
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Default admin credentials (override with environment variables)
